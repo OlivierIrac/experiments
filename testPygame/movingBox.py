@@ -123,16 +123,17 @@ class MyWindow:
 
 
 olivierFace=pygame.image.load(os.path.join('data','2015_06_27_EOS 70D_0978.jpg'))
+img2=pygame.image.load(os.path.join('data','alien1.jpg'))
 
 def olivierFaceDraw (x0,y0,w,h):
-#    xSize = olivierFace.get_width()
-#    ySize = olivierFace.get_height()
-#    (xSize, ySize)=resizeProportional(xSize, ySize,w, h)
-    log ("FaceDraw xo %i y0 %i w%i h%i"%(x0,y0,w,h))
     olivierFaceZoomed=pygame.transform.smoothscale(olivierFace, (w, h))
     olivierFaceImgToBlit=olivierFaceZoomed.convert()
     screen.blit(olivierFaceImgToBlit, (x0, y0))
 
+def img2Draw (x0,y0,w,h):
+    img2Zoomed=pygame.transform.smoothscale(img2, (w, h))
+    img2ImgToBlit=img2Zoomed.convert()
+    screen.blit(img2ImgToBlit, (x0, y0))
 
 pygame.init()
 screen = pygame.display.set_mode((800, 600), pygame.RESIZABLE)
@@ -140,7 +141,7 @@ clock = pygame.time.Clock()
 done = False
 
 olivierFaceWindow=MyWindow(olivierFaceDraw,0,0,100,100)
-olivierFaceWindow=MyWindow(olivierFaceDraw,200,200,150,150)
+olivierFaceWindow=MyWindow(img2Draw,200,200,150,150)
 
 while (not done):
     pygame.display.set_caption(" FPS : {:.4}".format(clock.get_fps()))
