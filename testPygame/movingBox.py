@@ -3,7 +3,6 @@ Created on 15 juin 2017
 
 @author: irac1
 '''
-#test comment
 
 import pygame
 import os
