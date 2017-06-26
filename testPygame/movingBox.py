@@ -114,39 +114,43 @@ class MyWindow:
                 
             if (window.resize == True):
                 window.width = window.width0 + mx - MyWindow.mxPress
-                window.height = window.height0 + my - MyWindow.myPress
-        
-          
+                window.height = window.height0 + my - MyWindow.myPress    
+
         MyWindow.draw()
 
 
-
-olivierFace=pygame.image.load(os.path.join('data','2015_06_27_EOS 70D_0978.jpg'))
-img2=pygame.image.load(os.path.join('data','alien1.jpg'))
-img3=pygame.image.load(os.path.join('data','IMG_0760.jpg'))
-
-def imgDraw(surface,x0,y0,w,h):
-    imgZoomed=pygame.transform.smoothscale(surface, (w, h))
-    imgToBlit=imgZoomed.convert()
-    screen.blit(imgToBlit, (x0, y0))
-    
-def olivierFaceDraw (x0,y0,w,h):
-    imgDraw(olivierFace, x0,y0,w,h)
-
-def img2Draw (x0,y0,w,h):
-    imgDraw(img2, x0,y0,w,h)
-    
-def img3Draw (x0,y0,w,h):
-    imgDraw(img3, x0,y0,w,h)
-        
 pygame.init()
 screen = pygame.display.set_mode((800, 600), pygame.RESIZABLE)
+    
+class imgHandle:
+    def __init__(self, surface):
+        self.w=0
+        self.h=0
+        self.surface=surface
+        self.imgToBlit=surface.convert()
+        
+    def Draw (self,x0,y0,w,h):
+        if (self.w!=w or self.h!=h):
+            self.w=w
+            self.h=h
+            print ("zoom")
+            imgZoomed=pygame.transform.smoothscale(self.surface, (self.w, self.h))
+            self.imgToBlit=imgZoomed.convert()
+        screen.blit(self.imgToBlit, (x0, y0))
+
+img1=pygame.image.load(os.path.join('data','2015_06_27_EOS 70D_0978.jpg'))
+img1Handle=imgHandle(img1)
+img2=pygame.image.load(os.path.join('data','alien1.jpg'))
+img2Handle=imgHandle(img2)         
+img3=pygame.image.load(os.path.join('data','IMG_0760.jpg'))
+img3Handle=imgHandle(img3)         
+
 clock = pygame.time.Clock()
 done = False
 
-olivierFaceWindow=MyWindow(olivierFaceDraw,0,0,100,100)
-img2Window=MyWindow(img2Draw,50,50,150,150)
-img3Window=MyWindow(img3Draw,100,150,200,400)
+img1Window=MyWindow(img1Handle.Draw,0,0,100,100)
+img2Window=MyWindow(img2Handle.Draw,50,50,150,150)
+img3Window=MyWindow(img3Handle.Draw,100,150,200,400)
 
 while (not done):
     pygame.display.set_caption(" FPS : {:.4}".format(clock.get_fps()))
