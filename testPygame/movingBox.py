@@ -7,9 +7,10 @@ Created on 15 juin 2017
 import pygame
 import os
 
+# ajout comment
+
 def log(*args):
     print(*args)
-
 
 class Color:
     def __init__ (self,name,r,g,b):
