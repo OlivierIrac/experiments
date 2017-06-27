@@ -163,11 +163,11 @@ clock = pygame.time.Clock()
 class DrawCount:
     def __init__(self):
         pygame.font.init() 
-        self.myfont = pygame.font.SysFont('Comic Sans MS', 30)
         self.i=0
         self.s=""
         
     def draw(self,left,top,w,h):
+        self.myfont=pygame.font.SysFont('Calibri', h)
         self.i+=1
         self.s=str(self.i)
         textsurface = self.myfont.render(self.s, False, (255, 255, 255))
@@ -182,8 +182,7 @@ img4Window=MyWindow(count.draw,200,200,100,50,True)
 
 done = False
 while (not done):
-    pygame.display.set_caption(" FPS : {:.4}".format(clock.get_fps()))
-    
+    pygame.display.set_caption(" FPS : {:.4}".format(clock.get_fps()))    
     event=pygame.event.poll()
     MyWindow.handleWindows(event)
 
