@@ -178,9 +178,9 @@ def blit_text(surface, text, pos, font, color=pygame.Color('black')):
         y += word_height  # Start on new row.
         
 class DrawCount:
-    def __init__(self):
+    def __init__(self,i0):
         pygame.font.init() 
-        self.i=0
+        self.i=i0
         
     def draw(self,left,top,w,h):
         font=pygame.font.SysFont('Calibri', h)
@@ -194,8 +194,10 @@ class DrawCount:
 img1Window=MyWindow(ImageHandle(os.path.join('data','2015_06_27_EOS 70D_0978.jpg'),True).draw,0,0,100,100,True)
 img2Window=MyWindow(ImageHandle(os.path.join('data','alien1.jpg')).draw,50,50,150,150)
 img3Window=MyWindow(ImageHandle(os.path.join('data','IMG_0760.jpg')).draw,100,150,200,400)
-count=DrawCount()
+count=DrawCount(0)
 img4Window=MyWindow(count.draw,200,200,100,50,True)
+count2=DrawCount(2000)
+img4Window=MyWindow(count2.draw,200,200,100,50,True)
 
 done = False
 while (not done):
