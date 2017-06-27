@@ -160,18 +160,35 @@ pygame.init()
 screen = pygame.display.set_mode((800, 600), pygame.RESIZABLE)
 clock = pygame.time.Clock()
 
+def blit_text(surface, text, pos, font, color=pygame.Color('black')):
+    words = [word.split(' ') for word in text.splitlines()]  # 2D array where each row is a list of words.
+    space = font.size(' ')[0]  # The width of a space.
+    max_width = surface.get_width()
+    x, y = pos
+    for line in words:
+        for word in line:
+            word_surface = font.render(word, 0, color)
+            word_width, word_height = word_surface.get_size()
+            if x + word_width >= max_width:
+                x = pos[0]  # Reset the x.
+                y += word_height  # Start on new row.
+            surface.blit(word_surface, (x, y))
+            x += word_width + space
+        x = pos[0]  # Reset the x.
+        y += word_height  # Start on new row.
+        
 class DrawCount:
     def __init__(self):
         pygame.font.init() 
         self.i=0
-        self.s=""
         
     def draw(self,left,top,w,h):
-        self.myfont=pygame.font.SysFont('Calibri', h)
+        font=pygame.font.SysFont('Calibri', h)
         self.i+=1
-        self.s=str(self.i)
-        textsurface = self.myfont.render(self.s, False, (255, 255, 255))
-        screen.blit(textsurface,(left,top))
+        s=""
+        for j in range (self.i,self.i+10):
+            s+=str(j)+"\n"
+        blit_text(screen, s, (left, top), font, pygame.Color('white'))
     
 
 img1Window=MyWindow(ImageHandle(os.path.join('data','2015_06_27_EOS 70D_0978.jpg'),True).draw,0,0,100,100,True)
