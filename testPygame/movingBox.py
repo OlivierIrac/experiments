@@ -58,12 +58,18 @@ class MyWindow:
         MyWindow.windowsList.remove(window)
         MyWindow.windowsList.insert(0,window)
         MyWindow.windowSelected=True
+    
+    @staticmethod
+    def removeWindow(window):
+        MyWindow.windowsList.remove(window)
+        MyWindow.draw()
         
     @staticmethod
     def handleWindows(event):
         mx, my = pygame.mouse.get_pos()
         resizeCursor=False
         MyWindow.windowSelected=False
+        zoom=False
         for window in MyWindow.windowsList:
             if (window.isInBottomRightCorner(mx,my) or window.resize):  # click lower right corner = resize
                 resizeCursor=True
@@ -76,10 +82,20 @@ class MyWindow:
                         MyWindow.selectWindow(window)
                         window.drag=True
                         
-                if (event.button == 4):
-                    (window.width,window.height) = resizeProportional (window.width,window.height, window.width+MyWindow.zoomSpeed,window.height+MyWindow.zoomSpeed)
-                if (event.button == 5):
-                    (window.width,window.height) = resizeProportional (window.width,window.height, window.width-MyWindow.zoomSpeed,window.height-MyWindow.zoomSpeed)
+                if (event.button == 3 and window.left<=mx<window.left+window.width and window.top<=my<window.top+window.height):
+                    MyWindow.removeWindow(window)
+                        
+                if (window.left<=mx<window.left+window.width and window.top<=my<window.top+window.height and zoom==False):
+                    if (event.button == 4):
+                        (window.width,window.height) = resizeProportional (window.width,window.height, window.width+2*MyWindow.zoomSpeed,window.height+2*MyWindow.zoomSpeed)
+                        window.top-=MyWindow.zoomSpeed
+                        window.left-=MyWindow.zoomSpeed
+                        zoom=True
+                    if (event.button == 5):
+                        (window.width,window.height) = resizeProportional (window.width,window.height, window.width-2*MyWindow.zoomSpeed,window.height-2*MyWindow.zoomSpeed)
+                        window.top+=MyWindow.zoomSpeed
+                        window.left+=MyWindow.zoomSpeed
+                        zoom=True
 
             if ((not pygame.mouse.get_pressed()[0]) and (not pygame.mouse.get_pressed()[2])):                    
                 window.drag = False
@@ -123,7 +139,7 @@ class ImageHandle:
         self.imgToBlit=self.surface.convert()
         self.proportional=proportional
         
-    def Draw (self,left,top,w,h,):
+    def draw (self,left,top,w,h):
         if (self.w!=w or self.h!=h):
             self.w=w
             self.h=h
@@ -144,9 +160,25 @@ pygame.init()
 screen = pygame.display.set_mode((800, 600), pygame.RESIZABLE)
 clock = pygame.time.Clock()
 
-img1Window=MyWindow(ImageHandle(os.path.join('data','2015_06_27_EOS 70D_0978.jpg'),True).Draw,0,0,100,100,True)
-img2Window=MyWindow(ImageHandle(os.path.join('data','alien1.jpg')).Draw,50,50,150,150)
-img3Window=MyWindow(ImageHandle(os.path.join('data','IMG_0760.jpg')).Draw,100,150,200,400)
+class DrawCount:
+    def __init__(self):
+        pygame.font.init() 
+        self.myfont = pygame.font.SysFont('Comic Sans MS', 30)
+        self.i=0
+        self.s=""
+        
+    def draw(self,left,top,w,h):
+        self.i+=1
+        self.s=str(self.i)
+        textsurface = self.myfont.render(self.s, False, (255, 255, 255))
+        screen.blit(textsurface,(left,top))
+    
+
+img1Window=MyWindow(ImageHandle(os.path.join('data','2015_06_27_EOS 70D_0978.jpg'),True).draw,0,0,100,100,True)
+img2Window=MyWindow(ImageHandle(os.path.join('data','alien1.jpg')).draw,50,50,150,150)
+img3Window=MyWindow(ImageHandle(os.path.join('data','IMG_0760.jpg')).draw,100,150,200,400)
+count=DrawCount()
+img4Window=MyWindow(count.draw,200,200,100,50,True)
 
 done = False
 while (not done):
