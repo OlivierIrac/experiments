@@ -33,8 +33,11 @@ def resizeProportional (x1,y1,x2,y2):
 
 
 class MyWindow:
+    # Constants
     MIN_WINDOW_WIDTH=10
     MIN_WINDOW_HEIGHT=10
+    WINDOW_DECORATION_COLOR=(0, 128, 255)
+    
     windowsList=[]
     zoomSpeed=10
     mxPress=0
@@ -46,7 +49,7 @@ class MyWindow:
         for window in reversed(MyWindow.windowsList):
             window.drawFunction(window.left,window.top,window.width,window.height)
             if (window.decoration):
-                pygame.draw.rect(screen,colorDictionary['blue'],pygame.Rect(window.left,window.top,window.width,window.height),2)
+                pygame.draw.rect(screen,MyWindow.WINDOW_DECORATION_COLOR,pygame.Rect(window.left,window.top,window.width,window.height),2)
                 
         
     def __init__ (self, drawFunction, left = 0, top = 0, windowWidth=800, windowHeight=600, decoration=False):
