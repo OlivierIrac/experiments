@@ -184,16 +184,16 @@ done = False
 while (not done):
     pygame.display.set_caption(" FPS : {:.4}".format(clock.get_fps()))
     
-    for event in pygame.event.get():
-        MyWindow.handleWindows(event)
+    event=pygame.event.poll()
+    MyWindow.handleWindows(event)
 
-        if (event.type == pygame.QUIT):
+    if (event.type == pygame.QUIT):
+        done = True
+    if (event.type == pygame.KEYDOWN):
+        if (event.key == pygame.K_ESCAPE): 
             done = True
-        if (event.type == pygame.KEYDOWN):
-            if (event.key == pygame.K_ESCAPE): 
-                done = True
-        if (event.type == pygame.VIDEORESIZE):
-            screen = pygame.display.set_mode((event.w, event.h), pygame.RESIZABLE)
+    if (event.type == pygame.VIDEORESIZE):
+        screen = pygame.display.set_mode((event.w, event.h), pygame.RESIZABLE)
                 
     pygame.display.flip()
     clock.tick(120)
