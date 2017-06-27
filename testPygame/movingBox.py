@@ -7,31 +7,6 @@ Created on 15 juin 2017
 import pygame
 import os
 
-# ajout comment
-
-
-class Color:
-    def __init__ (self,name,r,g,b):
-        self.color=(r,g,b)
-        self.name=name
-        
-colorDictionary={'blue':(0, 128, 255), 'orange':(255, 100, 0), 'white':(255,255,255)}
-
-colorIdx='orange'
-
-def resizeProportional (x1,y1,x2,y2):
-    xRatio = float(x2)/float(x1)
-    yRatio = float(y2)/float(y1)
-    if (xRatio > yRatio): 
-        x1=yRatio*x1
-        y1=y2
-    else:
-        x1=x2
-        y1=xRatio*y1
-    return (int(x1),int(y1))
-
-
-
 class MyWindow:
     # Constants
     MIN_WINDOW_WIDTH=10
@@ -42,6 +17,7 @@ class MyWindow:
     zoomSpeed=10
     mxPress=0
     myPress=0
+    windowSelected=False
     
     @staticmethod
     def draw():
@@ -73,36 +49,33 @@ class MyWindow:
         return ((self.left + self.width -2) <= x <= (self.left + self.width + 5) and (self.top + self.height -2) <= y <= (self.top + self.height + 5)) 
  
     @staticmethod
+    def selectWindow(window):
+        (MyWindow.mxPress, MyWindow.myPress) = pygame.mouse.get_pos()             
+        window.left0=window.left
+        window.top0=window.top
+        window.width0=window.width
+        window.height0=window.height
+        MyWindow.windowsList.remove(window)
+        MyWindow.windowsList.insert(0,window)
+        MyWindow.windowSelected=True
+        
+    @staticmethod
     def handleWindows(event):
         mx, my = pygame.mouse.get_pos()
         resizeCursor=False
-        windowSelected=False
+        MyWindow.windowSelected=False
         for window in MyWindow.windowsList:
             if (window.isInBottomRightCorner(mx,my) or window.resize):  # click lower right corner = resize
                 resizeCursor=True
-            if (event.type == pygame.MOUSEBUTTONDOWN and not windowSelected):
+            if (event.type == pygame.MOUSEBUTTONDOWN and not MyWindow.windowSelected):
                 if (event.button == 1 and window.resize == False and window.drag == False):
                     if (window.isInBottomRightCorner(mx, my)): #click lower right corner = resize
-                        MyWindow.mxPress=mx
-                        MyWindow.myPress=my               
-                        #cursor = pygame.cursors.compile(pygame.cursors.sizer_xy_strings)
-                        #colorIdx = 'white'
-                        MyWindow.windowsList.remove(window)
-                        MyWindow.windowsList.insert(0,window)
+                        MyWindow.selectWindow(window)
                         window.resize=True
-                        window.width0=window.width
-                        window.height0=window.height
-                        windowSelected=True
                     if (window.left<=mx<window.left+window.width-2 and window.top<=my<window.top+window.height-2): #click inside shape = move
-                        MyWindow.mxPress=mx
-                        MyWindow.myPress=my               
+                        MyWindow.selectWindow(window)
                         window.drag=True
-                        window.left0=window.left
-                        window.top0=window.top
-                        MyWindow.windowsList.remove(window)
-                        MyWindow.windowsList.insert(0,window)
-                        windowSelected=True
-
+                        
                 if (event.button == 4):
                     (window.width,window.height) = resizeProportional (window.width,window.height, window.width+MyWindow.zoomSpeed,window.height+MyWindow.zoomSpeed)
                 if (event.button == 5):
@@ -131,7 +104,16 @@ class MyWindow:
         MyWindow.draw()
 
 
-
+def resizeProportional (x1,y1,x2,y2):
+    xRatio = float(x2)/float(x1)
+    yRatio = float(y2)/float(y1)
+    if (xRatio > yRatio): 
+        x1=yRatio*x1
+        y1=y2
+    else:
+        x1=x2
+        y1=xRatio*y1
+    return (int(x1),int(y1))
     
 class ImageHandle:
     def __init__(self, file, proportional=False):
