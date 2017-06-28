@@ -7,117 +7,103 @@ Created on 15 juin 2017
 import pygame
 import os
 
-class MyWindow:
+class WindowManager:
     # Constants
     MIN_WINDOW_WIDTH=10
     MIN_WINDOW_HEIGHT=10
     WINDOW_DECORATION_COLOR=(0, 128, 255)
-    
-    windowsList=[]
-    zoomSpeed=10
-    mxPress=0
-    myPress=0
-    windowSelected=False
-    
-    @staticmethod
-    def draw():
-        screen.fill((0, 0, 0))
-        for window in reversed(MyWindow.windowsList):
-            window.drawFunction(window.left,window.top,window.width,window.height)
-            if (window.decoration):
-                pygame.draw.rect(screen,MyWindow.WINDOW_DECORATION_COLOR,pygame.Rect(window.left,window.top,window.width,window.height),2)
-                
+    ZOOM_SPEED=10
         
-    def __init__ (self, drawFunction, left = 0, top = 0, windowWidth=800, windowHeight=600, decoration=False):
-        self.width=windowWidth
-        self.height=windowHeight
-        self.left=left
-        self.top=top
-        self.drag = False
+    def __init__ (self):
+        self.windowsList=[]
+        self.mxPress=0
+        self.myPress=0
+        self.windowSelected=False
+        self.width0=0
+        self.height0=0
+        self.left0=0
+        self.top0=0
         self.resize=False
-        self.drawFunction=drawFunction
-        self.width0=self.width
-        self.height0=self.height
-        self.left0=self.left
-        self.top0=self.top
-        self.decoration=decoration
-        MyWindow.windowsList.insert(0,self)
-#        MyWindow.windowsList.append(self)
-        MyWindow.draw()
-    
-    def isInBottomRightCorner (self,x,y):
-        return ((self.left + self.width -2) <= x <= (self.left + self.width + 5) and (self.top + self.height -2) <= y <= (self.top + self.height + 5)) 
- 
-    @staticmethod
-    def selectWindow(window):
-        (MyWindow.mxPress, MyWindow.myPress) = pygame.mouse.get_pos()             
-        window.left0=window.left
-        window.top0=window.top
-        window.width0=window.width
-        window.height0=window.height
-        MyWindow.windowsList.remove(window)
-        MyWindow.windowsList.insert(0,window)
-        MyWindow.windowSelected=True
-    
-    @staticmethod
-    def removeWindow(window):
-        MyWindow.windowsList.remove(window)
-        MyWindow.draw()
+        self.drag=False
+
+    def add(self, windowHandler):
+        self.windowsList.insert(0,windowHandler)
         
-    @staticmethod
-    def handleWindows(event):
+    def draw(self):
+        screen.fill((0, 0, 0))
+        for window in reversed(self.windowsList):
+            window.draw()
+            if (window.decoration):
+                pygame.draw.rect(screen,WindowManager.WINDOW_DECORATION_COLOR,pygame.Rect(window.left,window.top,window.width,window.height),2)
+
+
+    def selectWindow(self,window):
+        (self.mxPress, self.myPress) = pygame.mouse.get_pos()             
+        self.left0=window.left
+        self.top0=window.top
+        self.width0=window.width
+        self.height0=window.height
+        self.windowsList.remove(window)
+        self.windowsList.insert(0,window)
+        self.windowSelected=True
+    
+    def removeWindow(self,window):
+        self.windowsList.remove(window)
+        self.draw()
+        
+    def handleWindows(self,event):
         mx, my = pygame.mouse.get_pos()
         resizeCursor=False
-        MyWindow.windowSelected=False
+        self.windowSelected=False
         zoom=False
-        for window in MyWindow.windowsList:
-            if (window.isInBottomRightCorner(mx,my) or window.resize):  # click lower right corner = resize
+        for window in self.windowsList:
+            if (window.isInBottomRightCorner(mx,my) or self.resize):  # click lower right corner = resize
                 resizeCursor=True
-            if (event.type == pygame.MOUSEBUTTONDOWN and not MyWindow.windowSelected):
+            if (event.type == pygame.MOUSEBUTTONDOWN and not self.windowSelected):
                 if (event.button == 1 and window.resize == False and window.drag == False):
                     if (window.isInBottomRightCorner(mx, my)): #click lower right corner = resize
-                        MyWindow.selectWindow(window)
-                        window.resize=True
+                        self.selectWindow(window)
+                        self.resize=True
                     if (window.left<=mx<window.left+window.width-2 and window.top<=my<window.top+window.height-2): #click inside shape = move
-                        MyWindow.selectWindow(window)
-                        window.drag=True
+                        self.selectWindow(window)
+                        self.drag=True
                         
                 if (event.button == 3 and window.left<=mx<window.left+window.width and window.top<=my<window.top+window.height):
-                    MyWindow.removeWindow(window)
+                    self.removeWindow(window)
                         
                 if (window.left<=mx<window.left+window.width and window.top<=my<window.top+window.height and zoom==False):
                     if (event.button == 4):
-                        (window.width,window.height) = resizeProportional (window.width,window.height, window.width+2*MyWindow.zoomSpeed,window.height+2*MyWindow.zoomSpeed)
-                        window.top-=MyWindow.zoomSpeed
-                        window.left-=MyWindow.zoomSpeed
+                        (window.width,window.height) = resizeProportional (window.width,window.height, window.width+2*WindowManager.ZOOM_SPEED,window.height+2*WindowManager.ZOOM_SPEED)
+                        window.top-=WindowManager.ZOOM_SPEED
+                        window.left-=WindowManager.ZOOM_SPEED
                         zoom=True
                     if (event.button == 5):
-                        (window.width,window.height) = resizeProportional (window.width,window.height, window.width-2*MyWindow.zoomSpeed,window.height-2*MyWindow.zoomSpeed)
-                        window.top+=MyWindow.zoomSpeed
-                        window.left+=MyWindow.zoomSpeed
+                        (window.width,window.height) = resizeProportional (window.width,window.height, window.width-2*WindowManager.ZOOM_SPEED,window.height-2*WindowManager.ZOOM_SPEED)
+                        window.top+=WindowManager.ZOOM_SPEED
+                        window.left+=WindowManager.ZOOM_SPEED
                         zoom=True
 
             if ((not pygame.mouse.get_pressed()[0]) and (not pygame.mouse.get_pressed()[2])):                    
-                window.drag = False
-                window.resize = False
+                self.drag = False
+                self.resize = False
                     
             if (resizeCursor):  # click lower right corner = resize
                 pygame.mouse.set_cursor(*pygame.cursors.broken_x)
             else:
                 pygame.mouse.set_cursor(*pygame.cursors.arrow)
 
-            if (window.drag == True):
-                window.left = window.left0 + mx - MyWindow.mxPress
-                window.top = window.top0 + my - MyWindow.myPress
+            if (self.drag == True):
+                window.left = self.left0 + mx - self.mxPress
+                window.top = self.top0 + my - self.myPress
                 
-            if (window.resize == True):
-                window.width = window.width0 + mx - MyWindow.mxPress
-                if (window.width<=MyWindow.MIN_WINDOW_WIDTH):
-                    window.width=MyWindow.MIN_WINDOW_WIDTH
-                window.height = window.height0 + my - MyWindow.myPress    
-                if (window.height<=MyWindow.MIN_WINDOW_HEIGHT):
-                    window.height=MyWindow.MIN_WINDOW_HEIGHT
-        MyWindow.draw()
+            if (self.resize == True):
+                window.width = self.width0 + mx - self.mxPress
+                if (window.width<=WindowManager.MIN_WINDOW_WIDTH):
+                    window.width=WindowManager.MIN_WINDOW_WIDTH
+                window.height = self.height0 + my - self.myPress    
+                if (window.height<=WindowManager.MIN_WINDOW_HEIGHT):
+                    window.height=WindowManager.MIN_WINDOW_HEIGHT
+        self.draw()
 
 
 def resizeProportional (x1,y1,x2,y2):
@@ -131,30 +117,54 @@ def resizeProportional (x1,y1,x2,y2):
         y1=xRatio*y1
     return (int(x1),int(y1))
     
-class ImageHandle:
-    def __init__(self, file, proportional=False):
-        self.w=0
-        self.h=0
-        self.surface=pygame.image.load(file)
-        self.imgToBlit=self.surface.convert()
+class WindowHandler:
+    def __init__(self, surface, left=0, top=0, width=800, height=600, decoration=False, proportional=False):
+        self.left=left
+        self.top=top
+        self.width=width
+        self.height=height
+        self.oldWidth=self.width
+        self.oldHeight=self.height
+        self.surface=surface
+        self.decoration=decoration
         self.proportional=proportional
-        
-    def draw (self,left,top,w,h):
-        if (self.w!=w or self.h!=h):
-            self.w=w
-            self.h=h
+        self.drag = False
+        self.resize=False
+        if (self.proportional):
+            width=self.surface.get_width()
+            height=self.surface.get_height()
+            (width,height)=resizeProportional(width,height,self.width,self.height)
+        else:
+            width=self.width
+            height=self.height                
+        imgZoomed=pygame.transform.smoothscale(self.surface, (width, height))
+        self.imgToBlit=imgZoomed.convert()
+
+
+  
+    def draw (self):
+        if (self.width!=self.oldWidth or self.height!=self.oldHeight): #zoom only if size has changed
+            self.oldWidth=self.width
+            self.oldHeight=self.height
             if (self.proportional):
                 width=self.surface.get_width()
                 height=self.surface.get_height()
-                (width,height)=resizeProportional(width,height,w,h)
+                (width,height)=resizeProportional(width,height,self.width,self.height)
             else:
-                width=w
-                height=h                
+                width=self.width
+                height=self.height                
             imgZoomed=pygame.transform.smoothscale(self.surface, (width, height))
             self.imgToBlit=imgZoomed.convert()
-        screen.blit(self.imgToBlit, (left, top))
+        screen.blit(self.imgToBlit, (self.left, self.top))
 
-
+    def isInBottomRightCorner (self,x,y):
+        return ((self.left + self.width -2) <= x <= (self.left + self.width + 5) and (self.top + self.height -2) <= y <= (self.top + self.height + 5)) 
+ 
+        
+class ImageHandler(WindowHandler):   
+    def __init__(self, file, left=0, top=0, width=800, height=600, decoration=False, proportional=False):
+        WindowHandler.__init__(self,pygame.image.load(file),left, top, width, height, decoration, proportional)
+        print ("Image %i %i",self.width, self.height)
 
 pygame.init()
 screen = pygame.display.set_mode((800, 600), pygame.RESIZABLE)
@@ -177,33 +187,37 @@ def blit_text(surface, text, pos, font, color=pygame.Color('black')):
         x = pos[0]  # Reset the x.
         y += word_height  # Start on new row.
         
-class DrawCount:
-    def __init__(self,i0):
+class CountHandler(WindowHandler):
+    def __init__(self, i0, left = 0, top = 0, width=800, height=600, decoration=False, proportional=False):
+        surface=screen
+        WindowHandler.__init__(self, surface, left, top, width, height, decoration, proportional)
         pygame.font.init() 
         self.i=i0
         
-    def draw(self,left,top,w,h):
-        font=pygame.font.SysFont('Calibri', h)
+    def draw(self):
+        font=pygame.font.SysFont('Calibri', self.height)
         self.i+=1
         s=""
         for j in range (self.i,self.i+10):
             s+=str(j)+"\n"
-        blit_text(screen, s, (left, top), font, pygame.Color('white'))
+        blit_text(screen, s, (self.left, self.top), font, pygame.Color('white'))
     
-
-img1Window=MyWindow(ImageHandle(os.path.join('data','2015_06_27_EOS 70D_0978.jpg'),True).draw,0,0,100,100,True)
-img2Window=MyWindow(ImageHandle(os.path.join('data','alien1.jpg')).draw,50,50,150,150)
-img3Window=MyWindow(ImageHandle(os.path.join('data','IMG_0760.jpg')).draw,100,150,200,400)
-count=DrawCount(0)
-img4Window=MyWindow(count.draw,200,200,100,50,True)
-count2=DrawCount(2000)
-img4Window=MyWindow(count2.draw,200,200,100,50,True)
+windowManager=WindowManager()
+img1Window=ImageHandler(os.path.join('data','2015_06_27_EOS 70D_0978.jpg'),0,0,100,100,True,True)
+windowManager.add(img1Window)
+#img2Window=MyWindow(ImageHandler(os.path.join('data','alien1.jpg')).draw,50,50,150,150)
+#img3Window=MyWindow(ImageHandler(os.path.join('data','IMG_0760.jpg')).draw,100,150,200,400)
+#count1=CountHandler(0)
+#windowManager.add(count1)
+#img4Window=MyWindow(count.draw,200,200,100,50,True)
+#count2=CountHandler(2000)
+#img4Window=MyWindow(count2.draw,200,200,100,50,True)
 
 done = False
 while (not done):
     pygame.display.set_caption(" FPS : {:.4}".format(clock.get_fps()))    
     event=pygame.event.poll()
-    MyWindow.handleWindows(event)
+    windowManager.handleWindows(event)
 
     if (event.type == pygame.QUIT):
         done = True
