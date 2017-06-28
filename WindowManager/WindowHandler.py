@@ -29,6 +29,7 @@ class WindowHandler:
         self.proportional=proportional
         self.drag = False
         self.resize=False
+        self.paused=False
         if (self.proportional):
             width=self.surface.get_width()
             height=self.surface.get_height()
@@ -41,7 +42,7 @@ class WindowHandler:
 
 
   
-    def draw (self):
+    def draw (self, surface):
         if (self.width!=self.oldWidth or self.height!=self.oldHeight): #zoom only if size has changed
             self.oldWidth=self.width
             self.oldHeight=self.height
@@ -54,20 +55,24 @@ class WindowHandler:
                 height=self.height                
             imgZoomed=pygame.transform.smoothscale(self.surface, (width, height))
             self.imgToBlit=imgZoomed.convert()
-        screen.blit(self.imgToBlit, (self.left, self.top))
+        surface.blit(self.imgToBlit, (self.left, self.top))
 
     def isInBottomRightCorner (self,x,y):
         return ((self.left + self.width -2) <= x <= (self.left + self.width + 5) and (self.top + self.height -2) <= y <= (self.top + self.height + 5)) 
+    
+    def pause(self):
+        self.paused=True
+    def unpause(self):
+        self.paused=False
+    def exit(self):
+        print ("Bye")
+        
+        
  
         
 class ImageHandler(WindowHandler):   
     def __init__(self, file, left=0, top=0, width=800, height=600, decoration=False, proportional=False):
         WindowHandler.__init__(self,pygame.image.load(file),left, top, width, height, decoration, proportional)
-        print ("Image %i %i",self.width, self.height)
-
-pygame.init()
-screen = pygame.display.set_mode((800, 600), pygame.RESIZABLE)
-clock = pygame.time.Clock()
 
 def blit_text(surface, text, pos, font, color=pygame.Color('black')):
     words = [word.split(' ') for word in text.splitlines()]  # 2D array where each row is a list of words.
@@ -87,16 +92,16 @@ def blit_text(surface, text, pos, font, color=pygame.Color('black')):
         y += word_height  # Start on new row.
         
 class CountHandler(WindowHandler):
-    def __init__(self, i0, left = 0, top = 0, width=800, height=600, decoration=False, proportional=False):
-        surface=screen
+    def __init__(self, i0, surface, left = 0, top = 0, width=800, height=600, decoration=False, proportional=False):
         WindowHandler.__init__(self, surface, left, top, width, height, decoration, proportional)
         pygame.font.init() 
         self.i=i0
         
-    def draw(self):
+    def draw(self,surface):
         font=pygame.font.SysFont('Calibri', self.height)
-        self.i+=1
+        if (not self.paused):
+            self.i+=1
         s=""
         for j in range (self.i,self.i+10):
             s+=str(j)+"\n"
-        blit_text(screen, s, (self.left, self.top), font, pygame.Color('white'))
+        blit_text(surface, s, (self.left, self.top), font, pygame.Color('white'))

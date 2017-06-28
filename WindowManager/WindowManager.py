@@ -13,7 +13,7 @@ class WindowManager:
     WINDOW_DECORATION_COLOR=(0, 128, 255)
     ZOOM_SPEED=10
         
-    def __init__ (self):
+    def __init__ (self, surface):
         self.windowsList=[]
         self.mxPress=0
         self.myPress=0
@@ -24,16 +24,22 @@ class WindowManager:
         self.top0=0
         self.resize=False
         self.drag=False
+        self.surface=surface
 
     def add(self, windowHandler):
         self.windowsList.insert(0,windowHandler)
         
     def draw(self):
-        screen.fill((0, 0, 0))
+        #pause all but top window
+        for windows in self.windowsList:
+            windows.pause()
+        if (len(self.windowsList)!=0):
+            self.windowsList[0].unpause()
+        self.surface.fill((0, 0, 0))
         for window in reversed(self.windowsList):
-            window.draw()
+            window.draw(self.surface)
             if (window.decoration):
-                pygame.draw.rect(screen,WindowManager.WINDOW_DECORATION_COLOR,pygame.Rect(window.left,window.top,window.width,window.height),2)
+                pygame.draw.rect(self.surface,WindowManager.WINDOW_DECORATION_COLOR,pygame.Rect(window.left,window.top,window.width,window.height),2)
 
 
     def selectWindow(self,window):
@@ -45,9 +51,11 @@ class WindowManager:
         self.windowsList.remove(window)
         self.windowsList.insert(0,window)
         self.windowSelected=True
+
     
     def removeWindow(self,window):
         self.windowsList.remove(window)
+        window.exit()
         self.draw()
         
     def handleWindows(self,event):
