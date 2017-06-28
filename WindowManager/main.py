@@ -4,7 +4,8 @@ Created on 28 juin 2017
 @author: irac1
 '''
 import pygame
-import WindowManager
+import os
+from WindowManager import *
 
 windowManager=WindowManager()
 img1Window=ImageHandler(os.path.join('data','2015_06_27_EOS 70D_0978.jpg'),50,50,100,100,True,True)

@@ -4,7 +4,7 @@ Created on 15 juin 2017
 @author: irac1
 '''
 
-import WindowHandler
+from WindowHandler import *
 
 class WindowManager:
     # Constants
