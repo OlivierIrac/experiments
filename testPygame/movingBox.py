@@ -54,7 +54,7 @@ class WindowManager:
     def handleWindows(self,event):
         mx, my = pygame.mouse.get_pos()
         resizeCursor=False
-        self.windowSelected=False
+        
         zoom=False
         for window in self.windowsList:
             if (window.isInBottomRightCorner(mx,my) or self.resize):  # click lower right corner = resize
@@ -71,7 +71,7 @@ class WindowManager:
                 if (event.button == 3 and window.left<=mx<window.left+window.width and window.top<=my<window.top+window.height):
                     self.removeWindow(window)
                         
-                if (window.left<=mx<window.left+window.width and window.top<=my<window.top+window.height and zoom==False):
+                if (window.left<=mx<window.left+window.width and window.top<=my<window.top+window.height and not zoom):
                     if (event.button == 4):
                         (window.width,window.height) = resizeProportional (window.width,window.height, window.width+2*WindowManager.ZOOM_SPEED,window.height+2*WindowManager.ZOOM_SPEED)
                         window.top-=WindowManager.ZOOM_SPEED
@@ -86,6 +86,7 @@ class WindowManager:
             if ((not pygame.mouse.get_pressed()[0]) and (not pygame.mouse.get_pressed()[2])):                    
                 self.drag = False
                 self.resize = False
+                self.windowSelected=False
                     
             if (resizeCursor):  # click lower right corner = resize
                 pygame.mouse.set_cursor(*pygame.cursors.broken_x)
@@ -93,16 +94,16 @@ class WindowManager:
                 pygame.mouse.set_cursor(*pygame.cursors.arrow)
 
             if (self.drag == True):
-                window.left = self.left0 + mx - self.mxPress
-                window.top = self.top0 + my - self.myPress
+                self.windowsList[0].left = self.left0 + mx - self.mxPress
+                self.windowsList[0].top = self.top0 + my - self.myPress
                 
             if (self.resize == True):
-                window.width = self.width0 + mx - self.mxPress
-                if (window.width<=WindowManager.MIN_WINDOW_WIDTH):
-                    window.width=WindowManager.MIN_WINDOW_WIDTH
-                window.height = self.height0 + my - self.myPress    
-                if (window.height<=WindowManager.MIN_WINDOW_HEIGHT):
-                    window.height=WindowManager.MIN_WINDOW_HEIGHT
+                self.windowsList[0].width = self.width0 + mx - self.mxPress
+                if (self.windowsList[0].width<=WindowManager.MIN_WINDOW_WIDTH):
+                    self.windowsList[0].width=WindowManager.MIN_WINDOW_WIDTH
+                self.windowsList[0].height = self.height0 + my - self.myPress    
+                if (self.windowsList[0].height<=WindowManager.MIN_WINDOW_HEIGHT):
+                    self.windowsList[0].height=WindowManager.MIN_WINDOW_HEIGHT
         self.draw()
 
 
@@ -203,15 +204,16 @@ class CountHandler(WindowHandler):
         blit_text(screen, s, (self.left, self.top), font, pygame.Color('white'))
     
 windowManager=WindowManager()
-img1Window=ImageHandler(os.path.join('data','2015_06_27_EOS 70D_0978.jpg'),0,0,100,100,True,True)
+img1Window=ImageHandler(os.path.join('data','2015_06_27_EOS 70D_0978.jpg'),50,50,100,100,True,True)
 windowManager.add(img1Window)
-#img2Window=MyWindow(ImageHandler(os.path.join('data','alien1.jpg')).draw,50,50,150,150)
-#img3Window=MyWindow(ImageHandler(os.path.join('data','IMG_0760.jpg')).draw,100,150,200,400)
-#count1=CountHandler(0)
-#windowManager.add(count1)
-#img4Window=MyWindow(count.draw,200,200,100,50,True)
-#count2=CountHandler(2000)
-#img4Window=MyWindow(count2.draw,200,200,100,50,True)
+img2Window=ImageHandler(os.path.join('data','alien1.jpg'),50,50,150,150)
+windowManager.add(img2Window)
+img3Window=ImageHandler(os.path.join('data','IMG_0760.jpg'),100,150,200,400)
+windowManager.add(img3Window)
+count1=CountHandler(0, 150, 150, 200, 50, True)
+windowManager.add(count1)
+count2=CountHandler(2000, 300, 150, 200, 50, True)
+windowManager.add(count2)
 
 done = False
 while (not done):
