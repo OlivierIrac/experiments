@@ -4,20 +4,10 @@ Created on 28 juin 2017
 @author: irac1
 '''
 import pygame
-
-def resizeProportional (x1,y1,x2,y2):
-    xRatio = float(x2)/float(x1)
-    yRatio = float(y2)/float(y1)
-    if (xRatio > yRatio): 
-        x1=yRatio*x1
-        y1=y2
-    else:
-        x1=x2
-        y1=xRatio*y1
-    return (int(x1),int(y1))
-    
+from utils import resizeProportional,blit_text
+  
 class WindowHandler:
-    def __init__(self, surface, left=0, top=0, width=800, height=600, decoration=False, proportional=False):
+    def __init__(self, surface, left=0, top=0, width=800, height=600, title="", decoration=True, proportional=False):
         self.left=left
         self.top=top
         self.width=width
@@ -31,6 +21,7 @@ class WindowHandler:
         self.drag = False
         self.resize=False
         self.paused=False
+        self.title=title
         if (self.proportional):
             width=self.surface.get_width()
             height=self.surface.get_height()
@@ -72,29 +63,12 @@ class WindowHandler:
  
         
 class ImageHandler(WindowHandler):   
-    def __init__(self, file, left=0, top=0, width=800, height=600, decoration=False, proportional=False):
-        WindowHandler.__init__(self,pygame.image.load(file),left, top, width, height, decoration, proportional)
-
-def blit_text(surface, text, pos, font, color=pygame.Color('black')):
-    words = [word.split(' ') for word in text.splitlines()]  # 2D array where each row is a list of words.
-    space = font.size(' ')[0]  # The width of a space.
-    max_width = surface.get_width()
-    x, y = pos
-    for line in words:
-        for word in line:
-            word_surface = font.render(word, 0, color)
-            word_width, word_height = word_surface.get_size()
-            if x + word_width >= max_width:
-                x = pos[0]  # Reset the x.
-                y += word_height  # Start on new row.
-            surface.blit(word_surface, (x, y))
-            x += word_width + space
-        x = pos[0]  # Reset the x.
-        y += word_height  # Start on new row.
+    def __init__(self, file, left=0, top=0, width=800, height=600, decoration=True, proportional=False):
+        WindowHandler.__init__(self,pygame.image.load(file),left, top, width, height, file, decoration, proportional)
         
 class CountHandler(WindowHandler):
-    def __init__(self, i0, surface, left = 0, top = 0, width=800, height=600, decoration=False, proportional=False):
-        WindowHandler.__init__(self, surface, left, top, width, height, decoration, proportional)
+    def __init__(self, i0, surface, left = 0, top = 0, width=800, height=600, decoration=True, proportional=False):
+        WindowHandler.__init__(self, surface, left, top, width, height, "Count", decoration, proportional)
         pygame.font.init() 
         self.i=i0
         

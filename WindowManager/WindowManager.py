@@ -5,18 +5,23 @@ Created on 15 juin 2017
 '''
 
 from WindowHandler import *
+from utils import blit_text
 
 class WindowDecoration:
     COLOR=(0, 128, 255)
     BORDER_THICKNESS=2
-    TITLE_HEIGHT=30
+    TITLE_HEIGHT=20
+    TITLE_FONT_SIZE=16
+    TITLE_COLOR=(255,255,255)
     
     def __init__(self,windowHandler):
         self.myWindow=windowHandler
         
     def draw(self,surface):
-        pygame.draw.rect(surface,WindowDecoration.COLOR,pygame.Rect(self.myWindow.left,self.myWindow.top,self.myWindow.width,self.myWindow.height),WindowDecoration.BORDER_THICKNESS)
-        pygame.draw.rect(surface,WindowDecoration.COLOR,pygame.Rect(self.myWindow.left,self.myWindow.top-WindowDecoration.TITLE_HEIGHT,self.myWindow.width,WindowDecoration.TITLE_HEIGHT))
+        pygame.draw.rect(surface,WindowDecoration.COLOR,pygame.Rect(self.myWindow.left-WindowDecoration.BORDER_THICKNESS,self.myWindow.top-WindowDecoration.BORDER_THICKNESS,self.myWindow.width+WindowDecoration.BORDER_THICKNESS,self.myWindow.height+WindowDecoration.BORDER_THICKNESS),WindowDecoration.BORDER_THICKNESS)
+        pygame.draw.rect(surface,WindowDecoration.COLOR,pygame.Rect(self.myWindow.left-WindowDecoration.BORDER_THICKNESS,self.myWindow.top-WindowDecoration.TITLE_HEIGHT,self.myWindow.width+2*WindowDecoration.BORDER_THICKNESS,WindowDecoration.TITLE_HEIGHT))
+        font=pygame.font.SysFont('Calibri', WindowDecoration.TITLE_FONT_SIZE)
+        blit_text(surface, self.myWindow.title, (self.myWindow.left, self.myWindow.top-WindowDecoration.TITLE_FONT_SIZE-(WindowDecoration.TITLE_HEIGHT-WindowDecoration.TITLE_FONT_SIZE)/2), font, WindowDecoration.TITLE_COLOR)
         
     def isMouseInTitle(self):
         mx, my = pygame.mouse.get_pos()
@@ -94,8 +99,11 @@ class WindowManager:
                         self.selectWindow(window)
                         self.drag=True
                         
-                if (event.button == 3 and window.left<=mx<window.left+window.width and window.top<=my<window.top+window.height):
-                    self.removeWindow(window)
+                if (event.button == 3):
+                    if (window.decoration and window.decorationHandler.isMouseInTitle()):
+                        self.removeWindow(window)
+                    if (window.left<=mx<window.left+window.width and window.top<=my<window.top+window.height):
+                        self.removeWindow(window)
                         
                 if (window.left<=mx<window.left+window.width and window.top<=my<window.top+window.height and not zoom):
                     if (event.button == 4):
