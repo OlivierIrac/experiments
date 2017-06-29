@@ -6,11 +6,26 @@ Created on 15 juin 2017
 
 from WindowHandler import *
 
+class WindowDecoration:
+    COLOR=(0, 128, 255)
+    BORDER_THICKNESS=2
+    TITLE_HEIGHT=30
+    
+    def __init__(self,windowHandler):
+        self.myWindow=windowHandler
+        
+    def draw(self,surface):
+        pygame.draw.rect(surface,WindowDecoration.COLOR,pygame.Rect(self.myWindow.left,self.myWindow.top,self.myWindow.width,self.myWindow.height),WindowDecoration.BORDER_THICKNESS)
+        pygame.draw.rect(surface,WindowDecoration.COLOR,pygame.Rect(self.myWindow.left,self.myWindow.top-WindowDecoration.TITLE_HEIGHT,self.myWindow.width,WindowDecoration.TITLE_HEIGHT))
+        
+    def isMouseInTitle(self):
+        mx, my = pygame.mouse.get_pos()
+        return (self.myWindow.left<=mx<self.myWindow.left+self.myWindow.width and self.myWindow.top-WindowDecoration.TITLE_HEIGHT<=my<self.myWindow.top)
+        
 class WindowManager:
     # Constants
     MIN_WINDOW_WIDTH=10
     MIN_WINDOW_HEIGHT=10
-    WINDOW_DECORATION_COLOR=(0, 128, 255)
     ZOOM_SPEED=10
         
     def __init__ (self, surface):
@@ -28,6 +43,8 @@ class WindowManager:
 
     def add(self, windowHandler):
         self.windowsList.insert(0,windowHandler)
+        if (windowHandler.decoration):
+            windowHandler.decorationHandler=WindowDecoration(windowHandler)     
         
     def draw(self):
         #pause all but top window
@@ -39,8 +56,7 @@ class WindowManager:
         for window in reversed(self.windowsList):
             window.draw(self.surface)
             if (window.decoration):
-                pygame.draw.rect(self.surface,WindowManager.WINDOW_DECORATION_COLOR,pygame.Rect(window.left,window.top,window.width,window.height),2)
-
+                window.decorationHandler.draw(self.surface)
 
     def selectWindow(self,window):
         (self.mxPress, self.myPress) = pygame.mouse.get_pos()             
@@ -71,7 +87,10 @@ class WindowManager:
                     if (window.isInBottomRightCorner(mx, my)): #click lower right corner = resize
                         self.selectWindow(window)
                         self.resize=True
-                    if (window.left<=mx<window.left+window.width-2 and window.top<=my<window.top+window.height-2): #click inside shape = move
+                    if (window.decoration and window.decorationHandler.isMouseInTitle()):
+                        self.selectWindow(window)
+                        self.drag=True                        
+                    if (not window.decoration and window.left<=mx<window.left+window.width-2 and window.top<=my<window.top+window.height-2): #click inside shape = move
                         self.selectWindow(window)
                         self.drag=True
                         

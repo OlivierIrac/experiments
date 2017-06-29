@@ -26,6 +26,7 @@ class WindowHandler:
         self.oldHeight=self.height
         self.surface=surface
         self.decoration=decoration
+        self.decorationHandler=None
         self.proportional=proportional
         self.drag = False
         self.resize=False
