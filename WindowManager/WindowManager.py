@@ -16,12 +16,12 @@ class WindowDecoration:
     
     def __init__(self,windowHandler):
         self.myWindow=windowHandler
+        self.titleFont=pygame.font.SysFont('Calibri', WindowDecoration.TITLE_FONT_SIZE)
         
     def draw(self,surface):
         pygame.draw.rect(surface,WindowDecoration.COLOR,pygame.Rect(self.myWindow.left-WindowDecoration.BORDER_THICKNESS,self.myWindow.top-WindowDecoration.BORDER_THICKNESS,self.myWindow.width+WindowDecoration.BORDER_THICKNESS,self.myWindow.height+WindowDecoration.BORDER_THICKNESS),WindowDecoration.BORDER_THICKNESS)
         pygame.draw.rect(surface,WindowDecoration.COLOR,pygame.Rect(self.myWindow.left-WindowDecoration.BORDER_THICKNESS,self.myWindow.top-WindowDecoration.TITLE_HEIGHT,self.myWindow.width+2*WindowDecoration.BORDER_THICKNESS,WindowDecoration.TITLE_HEIGHT))
-        font=pygame.font.SysFont('Calibri', WindowDecoration.TITLE_FONT_SIZE)
-        blit_text(surface, self.myWindow.title, (self.myWindow.left, self.myWindow.top-WindowDecoration.TITLE_FONT_SIZE-(WindowDecoration.TITLE_HEIGHT-WindowDecoration.TITLE_FONT_SIZE)/2), font, WindowDecoration.TITLE_COLOR)
+        blit_text(surface, self.myWindow.title, (self.myWindow.left, self.myWindow.top-WindowDecoration.TITLE_FONT_SIZE-(WindowDecoration.TITLE_HEIGHT-WindowDecoration.TITLE_FONT_SIZE)/2), self.titleFont, WindowDecoration.TITLE_COLOR)
         
     def isMouseInTitle(self):
         mx, my = pygame.mouse.get_pos()

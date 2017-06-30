@@ -57,7 +57,7 @@ class WindowHandler:
     def unpause(self):
         self.paused=False
     def exit(self):
-        print ("Bye")
+        print (self.title,":exit()")
         
         
  
