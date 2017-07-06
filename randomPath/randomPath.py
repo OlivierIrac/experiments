@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 def drawRandomPath(surface,nbSteps):
     height=surface.get_height()
     width=surface.get_width()
+    alphaSurface = pygame.Surface((width,height), pygame.SRCALPHA)
     y=int(height/2)
     yNormalized=nbSteps
     xStep=int(width/nbSteps)
@@ -20,8 +21,9 @@ def drawRandomPath(surface,nbSteps):
         direction=random.choice([-1,1])
         y2=y+yStep*direction
         yNormalized=yNormalized+direction
-        pygame.draw.aaline(surface, (100,100,100),(x,y),(x+xStep,y2))
+        pygame.draw.line(alphaSurface, (100,100,100),(x,y),(x+xStep,y2))
         y=y2
+    surface.blit(alphaSurface,(0,0), None, pygame.BLEND_ADD)
     return yNormalized
 
 pygame.init()
