@@ -43,5 +43,5 @@ def buildLetterProbability(directory):
 #     plt.plot(letterProbability)
 #     plt.show()
 #             
-buildLetterProbability("English Open Word List (EOWL)")
+buildLetterProbability("francais")
         
