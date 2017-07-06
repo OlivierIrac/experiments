@@ -5,10 +5,9 @@ Created on 6 juil. 2017
 '''
 import os
 import string
-# encoding: utf-8
+import matplotlib.pyplot as plt
 
 def buildLetterProbability(directory):
-#    letterProbability=[[0]*27]*27
     letterProbability= [ [ 0 for i in range(27) ] for j in range(27) ]
     for filename in os.listdir(directory):
         print (filename,"...", end=" ")
@@ -26,12 +25,23 @@ def buildLetterProbability(directory):
             except ValueError:
                 e+=1       
         print (i,"words parsed",e,"errors")
-    print (letterProbability)
-    for a in range (0,27):
-        print (chr(97+a), end=" ")
-        for b in range (0,27):
-            print (chr(97+b),letterProbability[a][b], end=" ")
-        print ("\n")
-            
+        
+        f = open(os.path.join(directory,"LetterProbability.csv"),"w")
+        for a in range (0,27):
+            for b in range (0,26):
+                f.write (str(letterProbability[a][b]))
+                f.write (";")
+            f.write (str(letterProbability[a][26]))
+            f.write ("\n")
+        f.close()
+#     for a in range (0,27):
+#         print (chr(97+a), end=" ")
+#         for b in range (0,27):
+#             print (chr(97+b),letterProbability[a][b], end=" ")
+#         print ("\n")
+#         
+#     plt.plot(letterProbability)
+#     plt.show()
+#             
 buildLetterProbability("English Open Word List (EOWL)")
         
