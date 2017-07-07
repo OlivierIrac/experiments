@@ -64,8 +64,8 @@ def createRandomWord(probaLetters):
         
     
 # main           
-#probaLetters=buildLetterProbability("English Open Word List (EOWL)")
-probaLetters=buildLetterProbability("francais")
+probaLetters=buildLetterProbability("English Open Word List (EOWL)")
+#probaLetters=buildLetterProbability("francais")
 random.seed()
 for i in range (100):
     print (createRandomWord(probaLetters))
