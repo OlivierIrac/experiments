@@ -21,9 +21,9 @@ def store (probaTable, directory):
     f = open(os.path.join(directory,"LetterProbability.csv"),"w")
     for a in range (0,27):
         for b in range (0,26):
-            f.write (str(letterProbability[a][b]))
+            f.write (str(probaTable[a][b]))
             f.write (";")
-        f.write (str(letterProbability[a][26]))
+        f.write (str(probaTable[a][26]))
         f.write ("\n")
     f.close()
     print ("Results stored in:", os.path.join(directory,"LetterProbability.csv"))
