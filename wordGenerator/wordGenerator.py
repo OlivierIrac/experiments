@@ -17,7 +17,20 @@ def normalize (probaTable):
             probaTable[i][j]/=s
     return probaTable
 
+def store (probaTable, directory):
+    f = open(os.path.join(directory,"LetterProbability.csv"),"w")
+    for a in range (0,27):
+        for b in range (0,26):
+            f.write (str(letterProbability[a][b]))
+            f.write (";")
+        f.write (str(letterProbability[a][26]))
+        f.write ("\n")
+    f.close()
+    print ("Results stored in:", os.path.join(directory,"LetterProbability.csv"))
+
+
 def buildLetterProbability(directory):
+    # a=0, b=1, ..., z=25, space=26
     letterProbability= [ [ 0 for i in range(27) ] for j in range(27) ]
     for filename in os.listdir(directory):
         print (os.path.join(directory,filename),"...", end=" ")
@@ -34,38 +47,26 @@ def buildLetterProbability(directory):
                         letterProbability[string.ascii_lowercase.index(line[j])][26] +=1
             except ValueError:
                 e+=1       
-        print (i,"words parsed,",e,"errors")
-        
-    letterProbability=normalize(letterProbability)
-        
-    f = open(os.path.join(directory,"LetterProbability.csv"),"w")
-    for a in range (0,27):
-        for b in range (0,26):
-            f.write (str(letterProbability[a][b]))
-            f.write (";")
-        f.write (str(letterProbability[a][26]))
-        f.write ("\n")
-    f.close()
-    print ("Results stored in:", os.path.join(directory,"LetterProbability.csv"))
-    
+        print (i,"words parsed,",e,"errors")        
+    letterProbability=normalize(letterProbability)       
     return letterProbability
 
 
     
-def createRandomWord(probaLetters):
+def createRandomWord(probaTable):
     alphabet=['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z',' ']
     word=""
-    newLetter=choice(alphabet, p=probaLetters[26])
+    newLetter=choice(alphabet, p=probaTable[26])
     while (newLetter!=" "):
         word+=newLetter
         index=string.ascii_lowercase.index(newLetter)
-        newLetter=choice(alphabet, p=probaLetters[index])
+        newLetter=choice(alphabet, p=probaTable[index])
     return word
         
     
 # main           
-probaLetters=buildLetterProbability("English Open Word List (EOWL)")
+probaTable=buildLetterProbability("English Open Word List (EOWL)")
 #probaLetters=buildLetterProbability("francais")
 random.seed()
 for i in range (100):
-    print (createRandomWord(probaLetters))
+    print (createRandomWord(probaTable))
