@@ -29,7 +29,10 @@ class WordGenerator:
             for j in range (WordGenerator.__tableSize):
                 s+=self.__dupletsProba[i][j]
             for j in range (WordGenerator.__tableSize):
-                self.__dupletsProba[i][j]/=s
+                try:
+                    self.__dupletsProba[i][j]/=s
+                except ZeroDivisionError:
+                    print("Empty proba", WordGenerator.__alphabet[i], WordGenerator.__alphabet[j])
     
     def saveDupletsProbaAsCsv (self):
         f = open(os.path.join(self.__workingDirectory,"DupletsProbability.csv"),"w")
@@ -143,5 +146,6 @@ class WordGenerator:
 # main           
 #wordGenerator=WordGenerator("francais")
 wordGenerator=WordGenerator("English Open Word List (EOWL)")
+wordGenerator=WordGenerator("Italiano")
 for _ in range (200):
     print (wordGenerator.createRandomWord(5,10), end="")
