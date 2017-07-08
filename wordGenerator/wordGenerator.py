@@ -98,24 +98,21 @@ class WordGenerator:
                         newLetter=letter                
         return newLetter          
         
-    def createRandomWord(self,minNbLetter=1):
+    def createRandomWord(self,minNbLetter=1,maxNbLetter=100):
         word=""
-        while (len(word)<minNbLetter):
+        while (len(word)-1<minNbLetter or len(word)-1>maxNbLetter):
             word=""
             word+=self.__selectNextLetter(" ")
+            word+=self.__selectNextLetter(word[len(word)-1]," ", 10)
             newLetter=""        
-            while (newLetter!=" "):
-                if (len(word)>=2):
-                    #start evaluating candidates based on triplets
-                    newLetter=self.__selectNextLetter(word[len(word)-1],word[len(word)-2],10)
-                else:
-                    newLetter=self.__selectNextLetter(word[len(word)-1])
-                word+=newLetter            
+            while (word[len(word)-1]!=" "):
+                word+=self.__selectNextLetter(word[len(word)-1],word[len(word)-2],10)
+                            
         return word
             
     
 # main           
-'''
+
 frenchGenerator=WordGenerator("francais")
 for i in range (50):
     print (frenchGenerator.createRandomWord())
@@ -123,5 +120,5 @@ for i in range (50):
 
 englishGenerator=WordGenerator("English Open Word List (EOWL)")
 for i in range (50):
-    print (englishGenerator.createRandomWord())
-
+    print (englishGenerator.createRandomWord(5,8))
+'''
