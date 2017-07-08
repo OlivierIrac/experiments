@@ -6,10 +6,13 @@ Created on 6 juil. 2017
 import os
 import string
 import random
+import pickle
 from numpy.random import choice
 
 class WordGenerator:
     # a=0, b=1, ..., z=25, space=26
+    # dupletsProba[char1][char2] stores probability of char1 followed by char 2, normalized so that row sum=1 to be able to use numpy.random.choice
+    # tripletsProba [char1][char2][char3] stores number of occurrences of char1 followed by char2 followed by char3
     __alphabet=['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z',' ']
     __space=26
     __tableSize=len(__alphabet)
@@ -49,37 +52,51 @@ class WordGenerator:
     
 
         
-    def __init__(self,directory):
+    def __init__(self,directory,forceProbaTablesUpdate=False):
         self.__dupletsProba=[ [ 0 for i in range(WordGenerator.__tableSize) ] for j in range(WordGenerator.__tableSize) ]
         self.__tripletsProba=[ [ [ 0 for i in range(WordGenerator.__tableSize) ] for j in range(WordGenerator.__tableSize) ] for k in range(WordGenerator.__tableSize) ]
         self.__workingDirectory=directory
         
         random.seed()
-        for filename in os.listdir(self.__workingDirectory):
-            print (os.path.join(self.__workingDirectory,filename),"...", end=" ")
-            i=0
-            e=0
-            for line in open(os.path.join(self.__workingDirectory,filename)):
-                i+=1
-                try:
-                    #consider line starts with space
-                    self.__dupletsProba[WordGenerator.__space][string.ascii_lowercase.index(line[0])] +=1
-                    if (len(line)>2):
-                        self.__tripletsProba[WordGenerator.__space][string.ascii_lowercase.index(line[0])][string.ascii_lowercase.index(line[1])] +=1
-                    for j in range (len(line)-1):
-                        if (line[j+1]!="\r" and line[j+1]!="\n"):
-                            self.__dupletsProba[string.ascii_lowercase.index(line[j])][string.ascii_lowercase.index(line[j+1])] +=1
-                            if (j<len(line)-2):
-                                if (line[j+2]!="\r" and line[j+2]!="\n"):
-                                    self.__tripletsProba[string.ascii_lowercase.index(line[j])][string.ascii_lowercase.index(line[j+1])][string.ascii_lowercase.index(line[j+2])] +=1
+        if (not forceProbaTablesUpdate and os.path.isfile(os.path.join(self.__workingDirectory,"dupletsproba.sav")) and os.path.isfile(os.path.join(self.__workingDirectory,"tripletsproba.sav"))):
+            #read proba tables from previously stored files
+            with open(os.path.join(self.__workingDirectory,"dupletsproba.sav"), 'rb') as fp:
+                self.__dupletsProba=pickle.load(fp)
+            with open(os.path.join(self.__workingDirectory,"tripletsproba.sav"), 'rb') as fp:
+                self.__tripletsProba=pickle.load(fp)
+            print ("Loaded probality tables from ", os.path.join(self.__workingDirectory,"dupletsproba.sav"), os.path.join(self.__workingDirectory,"tripletsproba.sav"))
+        
+        else:    
+            for filename in os.listdir(self.__workingDirectory):
+                if filename.endswith('.txt'):
+                    print (os.path.join(self.__workingDirectory,filename),"...", end=" ")
+                    i=0
+                    e=0
+                    for line in open(os.path.join(self.__workingDirectory,filename)):
+                        i+=1
+                        try:
+                            #consider line starts with space
+                            self.__dupletsProba[WordGenerator.__space][string.ascii_lowercase.index(line[0])] +=1
+                            if (len(line)>2):
+                                self.__tripletsProba[WordGenerator.__space][string.ascii_lowercase.index(line[0])][string.ascii_lowercase.index(line[1])] +=1
+                            for j in range (len(line)-1):
+                                if (line[j+1]!="\r" and line[j+1]!="\n"):
+                                    self.__dupletsProba[string.ascii_lowercase.index(line[j])][string.ascii_lowercase.index(line[j+1])] +=1
+                                    if (j<len(line)-2):
+                                        if (line[j+2]!="\r" and line[j+2]!="\n"):
+                                            self.__tripletsProba[string.ascii_lowercase.index(line[j])][string.ascii_lowercase.index(line[j+1])][string.ascii_lowercase.index(line[j+2])] +=1
+                                        else:
+                                            self.__tripletsProba[string.ascii_lowercase.index(line[j])][string.ascii_lowercase.index(line[j+1])][WordGenerator.__space] +=1
                                 else:
-                                    self.__tripletsProba[string.ascii_lowercase.index(line[j])][string.ascii_lowercase.index(line[j+1])][WordGenerator.__space] +=1
-                        else:
-                            self.__dupletsProba[string.ascii_lowercase.index(line[j])][WordGenerator.__space] +=1
-                except ValueError:
-                    e+=1       
-            print (i,"words parsed,",e,"errors")        
-        self.__normalizeDupletsProba()
+                                    self.__dupletsProba[string.ascii_lowercase.index(line[j])][WordGenerator.__space] +=1
+                        except ValueError:
+                            e+=1       
+                    print (i,"words parsed,",e,"errors")        
+            self.__normalizeDupletsProba()
+            with open(os.path.join(self.__workingDirectory,"dupletsproba.sav"), 'wb') as fp:
+                pickle.dump(self.__dupletsProba, fp)
+            with open(os.path.join(self.__workingDirectory,"tripletsproba.sav"), 'wb') as fp:
+                pickle.dump(self.__tripletsProba, fp)
         
     def __selectNextLetter(self,previousLetter,previousPreviousLetter="",nbCandidates=1):   
         if (previousLetter==" "):
@@ -103,10 +120,10 @@ class WordGenerator:
         while (len(word)-1<minNbLetter or len(word)-1>maxNbLetter):
             word=""
             word+=self.__selectNextLetter(" ")
-            word+=self.__selectNextLetter(word[len(word)-1]," ", 10)
+            word+=self.__selectNextLetter(word[len(word)-1]," ", 2)
             newLetter=""        
             while (word[len(word)-1]!=" "):
-                word+=self.__selectNextLetter(word[len(word)-1],word[len(word)-2],10)
+                word+=self.__selectNextLetter(word[len(word)-1],word[len(word)-2],2)
                             
         return word
             
@@ -114,7 +131,7 @@ class WordGenerator:
 # main           
 
 frenchGenerator=WordGenerator("francais")
-for i in range (50):
+for i in range (500):
     print (frenchGenerator.createRandomWord())
 '''
 
