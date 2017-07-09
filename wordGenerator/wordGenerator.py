@@ -24,16 +24,25 @@ class WordGenerator:
         except ValueError:
             raise ValueError ("Cannot decode character",char)
         
-    def __normalizeDupletsProba (self):
+    def __normalizeProba (self):
         for i in range (WordGenerator.__tableSize):
-            s=0
+            dupletsSum=0
             for j in range (WordGenerator.__tableSize):
-                s+=self.__dupletsProba[i][j]
-            if (s==0):
+                dupletsSum+=self.__dupletsProba[i][j]
+                tripletsSum=0
+                for k in range (WordGenerator.__tableSize):
+                    tripletsSum+=self.__tripletsProba[i][j][k]
+                try:
+                    for k in range (WordGenerator.__tableSize):
+                        self.__tripletsProba[i][j][k]/=tripletsSum
+                except ZeroDivisionError:
+                    pass
+                    
+            if (dupletsSum==0):
                 print ("No letter",WordGenerator.__alphabet[i])
             else:
                 for j in range (WordGenerator.__tableSize):
-                    self.__dupletsProba[i][j]/=s
+                    self.__dupletsProba[i][j]/=dupletsSum
                     if (self.__dupletsProba[i][j]==0):
                         print("Empty proba", WordGenerator.__alphabet[i], WordGenerator.__alphabet[j])
     
@@ -106,7 +115,8 @@ class WordGenerator:
                     except UnicodeDecodeError as e:
                         print(e)  
                     print (wordCount,"words parsed,",errorCount,"errors")  
-            self.__normalizeDupletsProba()
+
+            self.__normalizeProba()
             with open(os.path.join(self.__workingDirectory,"dupletsproba.sav"), 'wb') as fp:
                 pickle.dump(self.__dupletsProba, fp)
             with open(os.path.join(self.__workingDirectory,"tripletsproba.sav"), 'wb') as fp:
