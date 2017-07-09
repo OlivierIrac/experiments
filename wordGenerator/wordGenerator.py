@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 '''
 Created on 6 juil. 2017
 
@@ -13,15 +15,19 @@ class WordGenerator:
     # a=0, b=1, ..., z=25, space=26
     # dupletsProba[char1][char2] stores probability of char1 followed by char 2, normalized so that row sum=1 to be able to use numpy.random.choice
     # tripletsProba [char1][char2][char3] stores number of occurrences of char1 followed by char2 followed by char3
-    __alphabet=['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z',' ']
-    __space=26
+    __alphabet=['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z',' ','-','\'','ç','á','é','ú','à','è','ì','ù','â','ê','î','ô','û','ä','ë','ï','ö','ü']
+    __space=__alphabet.index(' ')
     __tableSize=len(__alphabet)
     
     def __charToIndex(self,char):
-        if (char==" "):
-            return WordGenerator.__space
-        else:
-            return string.ascii_lowercase.index(char)
+        try:
+            return WordGenerator.__alphabet.index(char)
+        except ValueError:
+            raise ValueError ("Cannot decode character %s" %(char))
+#         if (char==" "):
+#             return WordGenerator.__space
+#         else:
+#             return self.__charToIndex(char)
         
     def __normalizeDupletsProba (self):
         for i in range (WordGenerator.__tableSize):
@@ -56,8 +62,8 @@ class WordGenerator:
 
         
     def __init__(self,directory,forceProbaTablesUpdate=False):
-        self.__dupletsProba=[ [ 0 for i in range(WordGenerator.__tableSize) ] for j in range(WordGenerator.__tableSize) ]
-        self.__tripletsProba=[ [ [ 0 for i in range(WordGenerator.__tableSize) ] for j in range(WordGenerator.__tableSize) ] for k in range(WordGenerator.__tableSize) ]
+        self.__dupletsProba=[ [ 0 for _ in range(WordGenerator.__tableSize) ] for _ in range(WordGenerator.__tableSize) ]
+        self.__tripletsProba=[ [ [ 0 for _ in range(WordGenerator.__tableSize) ] for _ in range(WordGenerator.__tableSize) ] for _ in range(WordGenerator.__tableSize) ]
         self.__workingDirectory=directory
         
         random.seed()
@@ -80,23 +86,24 @@ class WordGenerator:
                         wordCount+=1
                         try:
                             # consider word starts with space
-                            self.__dupletsProba[WordGenerator.__space][string.ascii_lowercase.index(line[0])] +=1
+                            self.__dupletsProba[WordGenerator.__space][self.__charToIndex(line[0])] +=1
                             if (len(line)>2):
                                 # store triplet only if word is at least space-char1-char2 
-                                self.__tripletsProba[WordGenerator.__space][string.ascii_lowercase.index(line[0])][string.ascii_lowercase.index(line[1])] +=1
+                                self.__tripletsProba[WordGenerator.__space][self.__charToIndex(line[0])][self.__charToIndex(line[1])] +=1
                             for j in range (len(line)-1):
                                 if (line[j+1]!="\r" and line[j+1]!="\n"):
                                     # did not reach end of word, store duplet normally and store triplet if next char is still not eof word
-                                    self.__dupletsProba[string.ascii_lowercase.index(line[j])][string.ascii_lowercase.index(line[j+1])] +=1
+                                    self.__dupletsProba[self.__charToIndex(line[j])][self.__charToIndex(line[j+1])] +=1
                                     if (j<len(line)-2):
                                         if (line[j+2]!="\r" and line[j+2]!="\n"):
-                                            self.__tripletsProba[string.ascii_lowercase.index(line[j])][string.ascii_lowercase.index(line[j+1])][string.ascii_lowercase.index(line[j+2])] +=1
+                                            self.__tripletsProba[self.__charToIndex(line[j])][self.__charToIndex(line[j+1])][self.__charToIndex(line[j+2])] +=1
                                         else:
-                                            self.__tripletsProba[string.ascii_lowercase.index(line[j])][string.ascii_lowercase.index(line[j+1])][WordGenerator.__space] +=1
+                                            self.__tripletsProba[self.__charToIndex(line[j])][self.__charToIndex(line[j+1])][WordGenerator.__space] +=1
                                 else:
                                     # consider word ends with space
-                                    self.__dupletsProba[string.ascii_lowercase.index(line[j])][WordGenerator.__space] +=1
-                        except ValueError:
+                                    self.__dupletsProba[self.__charToIndex(line[j])][WordGenerator.__space] +=1
+                        except ValueError as e:
+                            print (repr(e))
                             errorCount+=1       
                     print (wordCount,"words parsed,",errorCount,"errors")        
             self.__normalizeDupletsProba()
@@ -112,12 +119,12 @@ class WordGenerator:
         else:
             if (previousPreviousLetter==""):
                 # Do not use triplets
-                newLetter=choice(WordGenerator.__alphabet, p=self.__dupletsProba[string.ascii_lowercase.index(previousLetter)])
+                newLetter=choice(WordGenerator.__alphabet, p=self.__dupletsProba[self.__charToIndex(previousLetter)])
             else:
                 # Draw nbCandidates letters from duplets probability and select best match from triplets 
                 newLetterCandidates=[]
                 for _ in range (nbCandidates):            
-                    newLetterCandidates.append(choice(WordGenerator.__alphabet, p=self.__dupletsProba[string.ascii_lowercase.index(previousLetter)]))
+                    newLetterCandidates.append(choice(WordGenerator.__alphabet, p=self.__dupletsProba[self.__charToIndex(previousLetter)]))
                 maxTripletProba=0
                 for letter in newLetterCandidates:
                     if (self.__tripletsProba[self.__charToIndex(previousPreviousLetter)][self.__charToIndex(previousLetter)][self.__charToIndex(letter)]>=maxTripletProba):
@@ -140,12 +147,12 @@ class WordGenerator:
             # select next letters
             while (word[len(word)-1]!=" "):
                 word+=self.__selectNextLetter(word[len(word)-1], word[len(word)-2], nbCandidates)                            
-        return word
-            
+        return word            
     
 # main           
 #wordGenerator=WordGenerator("francais")
-wordGenerator=WordGenerator("English Open Word List (EOWL)")
-wordGenerator=WordGenerator("Italiano")
+#wordGenerator=WordGenerator("English Open Word List (EOWL)")
+#wordGenerator=WordGenerator("Italiano")
+wordGenerator=WordGenerator("francais full")
 for _ in range (200):
-    print (wordGenerator.createRandomWord(5,10), end="")
+    print (wordGenerator.createRandomWord(), end="")
