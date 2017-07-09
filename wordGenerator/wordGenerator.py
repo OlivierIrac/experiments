@@ -14,7 +14,7 @@ class WordGenerator:
     # a=0, b=1, ..., z=25, space=26
     # dupletsProba[char1][char2] stores probability of char1 followed by char 2, normalized so that row sum=1 to be able to use numpy.random.choice
     # tripletsProba [char1][char2][char3] stores number of occurrences of char1 followed by char2 followed by char3
-    __alphabet=['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z',' ','-','\'','ç','á','é','ú','à','è','ì','ù','â','ê','î','ô','û','ä','ë','ï','ö','ü','Ã']
+    __alphabet=['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z',' ','-','\'','ç','á','é','ú','à','è','ì','ù','â','ê','î','ô','û','ä','ë','ï','ö','ü','Ã','ß']
     __space=__alphabet.index(' ')
     __tableSize=len(__alphabet)
     
@@ -150,9 +150,9 @@ class WordGenerator:
         return word            
     
 # main           
-#wordGenerator=WordGenerator("francais")
-wordGenerator=WordGenerator("English Open Word List (EOWL)",True)
+#wordGenerator=WordGenerator("English Open Word List (EOWL)")
 #wordGenerator=WordGenerator("Italiano")
 #wordGenerator=WordGenerator("francais full")
+wordGenerator=WordGenerator("German")
 for _ in range (200):
     print (wordGenerator.createRandomWord(), end="")
