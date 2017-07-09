@@ -24,7 +24,7 @@ class WordGenerator:
         except ValueError:
             raise ValueError ("Cannot decode character",char)
         
-    def __normalizeProba (self):
+    def __normalizeProba (self,verbose=False):
         for i in range (WordGenerator.__tableSize):
             dupletsSum=0
             for j in range (WordGenerator.__tableSize):
@@ -32,20 +32,24 @@ class WordGenerator:
                 tripletsSum=0
                 for k in range (WordGenerator.__tableSize):
                     tripletsSum+=self.__tripletsProba[i][j][k]
-                try:
-                    for k in range (WordGenerator.__tableSize):
+                for k in range (WordGenerator.__tableSize):
+                    try:
                         self.__tripletsProba[i][j][k]/=tripletsSum
-                except ZeroDivisionError:
-                    pass
+                    except ZeroDivisionError:
+                        pass    
                     
-            if (dupletsSum==0):
+            if (dupletsSum==0 and verbose):
                 print ("No letter",WordGenerator.__alphabet[i])
             else:
                 for j in range (WordGenerator.__tableSize):
-                    self.__dupletsProba[i][j]/=dupletsSum
-                    if (self.__dupletsProba[i][j]==0):
+                    try:
+                        self.__dupletsProba[i][j]/=dupletsSum
+                    except ZeroDivisionError:
+                        pass
+                    if (self.__dupletsProba[i][j]==0 and verbose):
                         print("Empty proba", WordGenerator.__alphabet[i], WordGenerator.__alphabet[j])
-    
+
+                
     def saveDupletsProbaAsCsv (self):
         f = open(os.path.join(self.__workingDirectory,"DupletsProbability.csv"),"w")
         for a in range (WordGenerator.__tableSize):
@@ -90,6 +94,7 @@ class WordGenerator:
                     errorCount=0
                     try:
                         for line in open(os.path.join(self.__workingDirectory,filename),encoding="utf8"):
+                        #for line in open(os.path.join(self.__workingDirectory,filename)):
                             wordCount+=1
                             try:
                                 # consider word starts with space
@@ -160,11 +165,11 @@ class WordGenerator:
         return word            
     
 # main           
-#wordGenerator=WordGenerator("English")
+#wordGenerator=WordGenerator("English",True)
 #wordGenerator=WordGenerator("English Open Word List (EOWL)")
-#wordGenerator=WordGenerator("Italiano")
-#wordGenerator=WordGenerator("francais full")
-wordGenerator=WordGenerator("francais top 1750",True)
-#wordGenerator=WordGenerator("German")
+#wordGenerator=WordGenerator("Italiano",True)
+#wordGenerator=WordGenerator("francais 22000")
+#wordGenerator=WordGenerator("francais top 1750")
+wordGenerator=WordGenerator("German",True)
 for _ in range (200):
-    print (wordGenerator.createRandomWord(), end="")
+    print (wordGenerator.createRandomWord(5,10))
