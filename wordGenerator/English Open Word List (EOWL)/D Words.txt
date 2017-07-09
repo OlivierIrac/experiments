@@ -2138,7 +2138,7 @@ departures
 depasture
 depastured
 depastures
-depÍche
+depÃche
 depeinct
 depend
 dependable
@@ -2391,8 +2391,8 @@ derogative
 derogatory
 derrick
 derricks
-derriËre
-derriËres
+derriÃ‹re
+derriÃ‹res
 derringer
 derringers
 derris
@@ -3390,8 +3390,8 @@ diebs
 died
 diedral
 diedrals
-diËdre
-diËdres
+diÃ‹dre
+diÃ‹dres
 diegeses
 diegesis
 dieldrin
@@ -6334,8 +6334,8 @@ drogue
 drogues
 droit
 droits
-drÙle
-drÙles
+drÃ™le
+drÃ™les
 droll
 drolled
 droller

@@ -2194,7 +2194,7 @@ tetchiest
 tetchily
 tetchiness
 tetchy
-tÍte
+tÃte
 tether
 tethered
 tethering
@@ -3373,8 +3373,8 @@ timbering
 timberings
 timberland
 timbers
-timbÛ
-timbÛs
+timbÃ›
+timbÃ›s
 timbre
 timbrel
 timbrels
@@ -4285,12 +4285,12 @@ torc
 torch
 torched
 torcher
-torchËre
-torchËres
+torchÃ‹re
+torchÃ‹res
 torches
 torchier
-torchiËre
-torchiËres
+torchiÃ‹re
+torchiÃ‹res
 torchiers
 torching
 torchlight
@@ -5359,7 +5359,7 @@ trepidant
 treponema
 treponemas
 treponeme
-trËs
+trÃ‹s
 trespass
 trespassed
 trespasser
@@ -6158,8 +6158,8 @@ trouts
 troutstone
 trouty
 trouvaille
-trouvËre
-trouvËres
+trouvÃ‹re
+trouvÃ‹res
 trouveur
 trouveurs
 trove
@@ -6886,8 +6886,8 @@ tuxedo
 tuxedoes
 tuxedos
 tuxes
-tuyËre
-tuyËres
+tuyÃ‹re
+tuyÃ‹res
 twa
 twaddle
 twaddled

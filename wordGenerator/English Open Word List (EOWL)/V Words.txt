@@ -379,8 +379,8 @@ varecs
 vares
 vareuse
 vareuses
-vargue“o
-vargue“os
+vargue√ío
+vargue√íos
 variable
 variables
 variably
@@ -1333,8 +1333,8 @@ victual
 victualled
 victualler
 victuals
-vicu“a
-vicu“as
+vicu√ía
+vicu√ías
 vid
 vidame
 vidames
@@ -1883,7 +1883,7 @@ vivacity
 vivaed
 vivaing
 vivandier
-vivandiÀre
+vivandi√ãre
 vivandiers
 vivaria
 vivaries
@@ -2041,7 +2041,7 @@ voidings
 voidness
 voidnesses
 voids
-voilá
+voil‚Ä°
 voile
 voiles
 voiture
@@ -2150,8 +2150,8 @@ volunteer
 volunteers
 voluptuary
 voluptuous
-vàluspa
-vàluspas
+vÀÜluspa
+vÀÜluspas
 volutation
 volute
 voluted

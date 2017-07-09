@@ -527,8 +527,8 @@ landing
 landings
 landladies
 landlady
-lândler
-lândlers
+l‚Ä∞ndler
+l‚Ä∞ndlers
 landless
 landloper
 landlopers
@@ -1035,7 +1035,7 @@ lavage
 lavages
 lavaliere
 lavalieres
-lavalliÀre
+lavalli√ãre
 lavas
 lavatera
 lavation
@@ -2242,8 +2242,8 @@ limacels
 limaceous
 limaciform
 limacine
-lima¡on
-lima¡ons
+lima√Åon
+lima√Åons
 limail
 limas
 limation

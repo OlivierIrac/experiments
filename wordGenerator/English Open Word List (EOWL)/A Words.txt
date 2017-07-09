@@ -1,4 +1,4 @@
-aa
+ï»¿aa
 aah
 aal
 aalii
@@ -1226,7 +1226,7 @@ adieu
 adieus
 adieux
 adigranth
-adius
+adiÃ›s
 adipic
 adipocere
 adipose
@@ -1858,6 +1858,8 @@ afterwords
 afterworld
 aftmost
 aga
+agaÃant
+agaÃante
 again
 against
 agalactia
@@ -2187,9 +2189,9 @@ aimless
 aimlessly
 aims
 ain
-aÓne
-aÓnee
-aÔoli
+aÃ“ne
+aÃ“nee
+aÃ”oli
 air
 airborne
 airbrush
@@ -2431,8 +2433,8 @@ alcatras
 alcatrases
 alcayde
 alcaydes
-alc·zar
-alc·zars
+alcÂ·zar
+alcÂ·zars
 alchemic
 alchemical
 alchemise
@@ -2523,7 +2525,7 @@ alexins
 alfa
 alfalfa
 alfalfas
-alfaquÌ
+alfaquÃŒ
 alfas
 alferez
 alferezes
@@ -3883,8 +3885,8 @@ angrily
 angriness
 angry
 angst
-˜ngstrˆm
-˜ngstrˆms
+â‰ˆngstrË†m
+â‰ˆngstrË†ms
 angsts
 anguiform
 anguine
@@ -4508,8 +4510,8 @@ apeman
 apemen
 apepsia
 apepsy
-aperÁu
-aperÁus
+aperÃu
+aperÃus
 aperient
 aperients
 aperies
@@ -4927,7 +4929,7 @@ appuyed
 appuying
 appuys
 apraxia
-aprËs
+aprÃ‹s
 apricate
 apricated
 apricates
@@ -5264,8 +5266,8 @@ areostyles
 arere
 ares
 aret
-arÍte
-arÍtes
+arÃte
+arÃtes
 arets
 arett
 aretted
@@ -5567,8 +5569,8 @@ arrestment
 arrestor
 arrestors
 arrests
-arrÍt
-arrÍts
+arrÃt
+arrÃts
 arrhythmia
 arrhythmic
 arriage
@@ -5726,7 +5728,7 @@ asafetida
 asafoetida
 asana
 asanas
-Âsar
+Ã‚sar
 asarabacca
 asarum
 asarums

@@ -203,8 +203,8 @@ galeated
 galena
 galenite
 galenoid
-galËre
-galËres
+galÃ‹re
+galÃ‹res
 gales
 galette
 galettes
@@ -540,8 +540,8 @@ gapeworms
 gaping
 gapingly
 gapings
-gapÛ
-gapÛs
+gapÃ›
+gapÃ›s
 gapped
 gappier
 gappiest
@@ -577,8 +577,8 @@ garbology
 garbos
 garbs
 garbure
-garÁon
-garÁons
+garÃon
+garÃons
 garda
 gardai
 gardant
@@ -1131,7 +1131,7 @@ gemsboks
 gemshorn
 gemstone
 gemstones
-gem¸tlich
+gemÂ¸tlich
 gen
 gena
 genal
@@ -2376,7 +2376,7 @@ glug
 glugged
 glugging
 glugs
-gl¸hwein
+glÂ¸hwein
 gluing
 gluish
 glum
@@ -3017,14 +3017,14 @@ gothicises
 gothicize
 gothicized
 gothicizes
-gˆthite
+gË†thite
 gotta
 gotten
 gouache
 gouaches
 gouge
 gouged
-gougËre
+gougÃ‹re
 gouges
 gouging
 goujeers
@@ -3612,7 +3612,7 @@ gregarian
 gregarine
 gregarines
 gregarious
-grËge
+grÃ‹ge
 grego
 gregories
 gregory
@@ -4187,8 +4187,8 @@ guano
 guanos
 guans
 guar
-guaran·
-guaran·s
+guaranÂ·
+guaranÂ·s
 guarani
 guaranies
 guaranis

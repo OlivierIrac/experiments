@@ -92,8 +92,8 @@ jadish
 jaeger
 jaegers
 jag
-j‰ger
-j‰gers
+jâ€°ger
+jâ€°gers
 jagged
 jaggedly
 jaggedness
@@ -127,8 +127,8 @@ jails
 jake
 jakes
 jalap
-jalapeÒo
-jalapeÒos
+jalapeÃ’o
+jalapeÃ’os
 jalapic
 jalapin
 jalaps
@@ -246,7 +246,7 @@ japs
 jar
 jararaca
 jararacas
-jardiniËre
+jardiniÃ‹re
 jarful
 jarfuls
 jargon

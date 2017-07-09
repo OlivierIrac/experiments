@@ -6,7 +6,6 @@ Created on 6 juil. 2017
 @author: Olivier Irac
 '''
 import os
-import string
 import random
 import pickle
 from numpy.random import choice
@@ -15,7 +14,7 @@ class WordGenerator:
     # a=0, b=1, ..., z=25, space=26
     # dupletsProba[char1][char2] stores probability of char1 followed by char 2, normalized so that row sum=1 to be able to use numpy.random.choice
     # tripletsProba [char1][char2][char3] stores number of occurrences of char1 followed by char2 followed by char3
-    __alphabet=['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z',' ','-','\'','ç','á','é','ú','à','è','ì','ù','â','ê','î','ô','û','ä','ë','ï','ö','ü']
+    __alphabet=['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z',' ','-','\'','ç','á','é','ú','à','è','ì','ù','â','ê','î','ô','û','ä','ë','ï','ö','ü','Ã']
     __space=__alphabet.index(' ')
     __tableSize=len(__alphabet)
     
@@ -23,22 +22,20 @@ class WordGenerator:
         try:
             return WordGenerator.__alphabet.index(char)
         except ValueError:
-            raise ValueError ("Cannot decode character %s" %(char))
-#         if (char==" "):
-#             return WordGenerator.__space
-#         else:
-#             return self.__charToIndex(char)
+            raise ValueError ("Cannot decode character",char)
         
     def __normalizeDupletsProba (self):
         for i in range (WordGenerator.__tableSize):
             s=0
             for j in range (WordGenerator.__tableSize):
                 s+=self.__dupletsProba[i][j]
-            for j in range (WordGenerator.__tableSize):
-                try:
+            if (s==0):
+                print ("No letter",WordGenerator.__alphabet[i])
+            else:
+                for j in range (WordGenerator.__tableSize):
                     self.__dupletsProba[i][j]/=s
-                except ZeroDivisionError:
-                    print("Empty proba", WordGenerator.__alphabet[i], WordGenerator.__alphabet[j])
+                    if (self.__dupletsProba[i][j]==0):
+                        print("Empty proba", WordGenerator.__alphabet[i], WordGenerator.__alphabet[j])
     
     def saveDupletsProbaAsCsv (self):
         f = open(os.path.join(self.__workingDirectory,"DupletsProbability.csv"),"w")
@@ -79,33 +76,36 @@ class WordGenerator:
             # analayse each .txt file and fill duplets and triplets proba tables, store tables in .sav files 
             for filename in os.listdir(self.__workingDirectory):
                 if filename.endswith('.txt'):
-                    print (os.path.join(self.__workingDirectory,filename),"...", end=" ")
+                    print (os.path.join(self.__workingDirectory,filename))
                     wordCount=0
                     errorCount=0
-                    for line in open(os.path.join(self.__workingDirectory,filename)):
-                        wordCount+=1
-                        try:
-                            # consider word starts with space
-                            self.__dupletsProba[WordGenerator.__space][self.__charToIndex(line[0])] +=1
-                            if (len(line)>2):
-                                # store triplet only if word is at least space-char1-char2 
-                                self.__tripletsProba[WordGenerator.__space][self.__charToIndex(line[0])][self.__charToIndex(line[1])] +=1
-                            for j in range (len(line)-1):
-                                if (line[j+1]!="\r" and line[j+1]!="\n"):
-                                    # did not reach end of word, store duplet normally and store triplet if next char is still not eof word
-                                    self.__dupletsProba[self.__charToIndex(line[j])][self.__charToIndex(line[j+1])] +=1
-                                    if (j<len(line)-2):
-                                        if (line[j+2]!="\r" and line[j+2]!="\n"):
-                                            self.__tripletsProba[self.__charToIndex(line[j])][self.__charToIndex(line[j+1])][self.__charToIndex(line[j+2])] +=1
-                                        else:
-                                            self.__tripletsProba[self.__charToIndex(line[j])][self.__charToIndex(line[j+1])][WordGenerator.__space] +=1
-                                else:
-                                    # consider word ends with space
-                                    self.__dupletsProba[self.__charToIndex(line[j])][WordGenerator.__space] +=1
-                        except ValueError as e:
-                            print (repr(e))
-                            errorCount+=1       
-                    print (wordCount,"words parsed,",errorCount,"errors")        
+                    try:
+                        for line in open(os.path.join(self.__workingDirectory,filename),encoding="utf8"):
+                            wordCount+=1
+                            try:
+                                # consider word starts with space
+                                self.__dupletsProba[WordGenerator.__space][self.__charToIndex(line[0])] +=1
+                                if (len(line)>2):
+                                    # store triplet only if word is at least space-char1-char2 
+                                    self.__tripletsProba[WordGenerator.__space][self.__charToIndex(line[0])][self.__charToIndex(line[1])] +=1
+                                for j in range (len(line)-1):
+                                    if (line[j+1]!="\r" and line[j+1]!="\n"):
+                                        # did not reach end of word, store duplet normally and store triplet if next char is still not eof word
+                                        self.__dupletsProba[self.__charToIndex(line[j])][self.__charToIndex(line[j+1])] +=1
+                                        if (j<len(line)-2):
+                                            if (line[j+2]!="\r" and line[j+2]!="\n"):
+                                                self.__tripletsProba[self.__charToIndex(line[j])][self.__charToIndex(line[j+1])][self.__charToIndex(line[j+2])] +=1
+                                            else:
+                                                self.__tripletsProba[self.__charToIndex(line[j])][self.__charToIndex(line[j+1])][WordGenerator.__space] +=1
+                                    else:
+                                        # consider word ends with space
+                                        self.__dupletsProba[self.__charToIndex(line[j])][WordGenerator.__space] +=1
+                            except ValueError as e:
+                                print ("Line", wordCount, e)
+                                errorCount+=1       
+                    except UnicodeDecodeError as e:
+                        print(e)  
+                    print (wordCount,"words parsed,",errorCount,"errors")  
             self.__normalizeDupletsProba()
             with open(os.path.join(self.__workingDirectory,"dupletsproba.sav"), 'wb') as fp:
                 pickle.dump(self.__dupletsProba, fp)
@@ -151,8 +151,8 @@ class WordGenerator:
     
 # main           
 #wordGenerator=WordGenerator("francais")
-#wordGenerator=WordGenerator("English Open Word List (EOWL)")
+wordGenerator=WordGenerator("English Open Word List (EOWL)",True)
 #wordGenerator=WordGenerator("Italiano")
-wordGenerator=WordGenerator("francais full")
+#wordGenerator=WordGenerator("francais full")
 for _ in range (200):
     print (wordGenerator.createRandomWord(), end="")

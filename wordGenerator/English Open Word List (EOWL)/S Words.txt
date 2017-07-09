@@ -1786,8 +1786,8 @@ schizonts
 schizopod
 schizopods
 schizos
-schl‰ger
-schl‰gers
+schlâ€°ger
+schlâ€°gers
 schlemiel
 schlemiels
 schlemihl
@@ -6777,7 +6777,7 @@ slagging
 slaggy
 slags
 slain
-sl‡inte
+slâ€¡inte
 slaister
 slaistered
 slaisters
@@ -7682,7 +7682,7 @@ smore
 smored
 smores
 smoring
-sm¯rrebr¯d
+smÂ¯rrebrÂ¯d
 smorzando
 smorzandos
 smorzato
@@ -8620,8 +8620,8 @@ soleuses
 solfatara
 solfataras
 solfataric
-solfËge
-solfËges
+solfÃ‹ge
+solfÃ‹ges
 solfeggi
 solfeggio
 solferino
@@ -9195,8 +9195,8 @@ soundness
 soundproof
 sounds
 soup
-soupÁon
-soupÁons
+soupÃon
+soupÃons
 souper
 soupers
 soupier
@@ -13917,7 +13917,7 @@ succeeding
 succeeds
 succentor
 succentors
-succËs
+succÃ‹s
 success
 successes
 successful
@@ -14012,8 +14012,8 @@ suction
 suctions
 suctorial
 suctorian
-sucuruj?
-sucuruj?s
+sucurujË™
+sucurujË™s
 sud
 sudamen
 sudamina

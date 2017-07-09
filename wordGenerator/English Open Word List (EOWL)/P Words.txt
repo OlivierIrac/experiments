@@ -2830,7 +2830,7 @@ perdures
 perduring
 perdus
 perdy
-pÀre
+p√ãre
 peregrine
 peregrines
 pereia
@@ -2846,7 +2846,7 @@ perennates
 perennial
 perennials
 perennity
-pÀres
+p√ãres
 perfay
 perfays
 perfect
@@ -4151,8 +4151,8 @@ pierrots
 piers
 pies
 piet
-pietá
-pietás
+piet‚Ä°
+piet‚Ä°s
 pieties
 pietism
 pietist
@@ -4396,7 +4396,7 @@ pimpliest
 pimply
 pimps
 pin
-pi“a
+pi√ía
 pinacoid
 pinacoidal
 pinacoids
@@ -4406,8 +4406,8 @@ pinafores
 pinakoidal
 pinaster
 pinasters
-pi“ata
-pi“atas
+pi√íata
+pi√íatas
 pinball
 pincase
 pincer
@@ -4548,8 +4548,8 @@ pinocle
 pinocles
 pinole
 pinoles
-pi“on
-pi“ons
+pi√íon
+pi√íons
 pinotage
 pinpoint
 pinpointed
@@ -4659,8 +4659,8 @@ piracies
 piracy
 piragua
 piraguas
-pira“a
-pira“as
+pira√ía
+pira√ías
 piranha
 piranhas
 pirarucu
@@ -4844,7 +4844,7 @@ pitying
 pityingly
 pityriasis
 pityroid
-pi?
+piÀò
 pium
 piums
 piupiu
@@ -5783,8 +5783,8 @@ podalic
 podded
 podding
 poddy
-podestá
-podestás
+podest‚Ä°
+podest‚Ä°s
 podex
 podexes
 podge
@@ -6717,8 +6717,8 @@ portico
 porticoed
 porticoes
 porticos
-portiÀre
-portiÀres
+porti√ãre
+porti√ãres
 porting
 portion
 portioned

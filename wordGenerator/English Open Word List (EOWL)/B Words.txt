@@ -1,4 +1,4 @@
-ba
+ï»¿ba
 bas
 baa
 baas
@@ -1381,7 +1381,7 @@ bastings
 bastion
 bastioned
 bastions
-bastn‰site
+bastnâ€°site
 basto
 bastos
 basts
@@ -1567,8 +1567,8 @@ bawr
 bawrs
 baxter
 bay
-bayadËre
-bayadËres
+bayadÃ‹re
+bayadÃ‹res
 bayberries
 bayberry
 bayed
@@ -2533,8 +2533,8 @@ bergander
 berganders
 bergenia
 bergenias
-bergËre
-bergËres
+bergÃ‹re
+bergÃ‹res
 bergfall
 bergfalls
 berghaan
@@ -2771,8 +2771,8 @@ betides
 betiding
 betime
 betimes
-bÍtise
-bÍtises
+bÃtise
+bÃtises
 betoken
 betokened
 betokening
@@ -3889,7 +3889,7 @@ blethered
 blethering
 blethers
 blets
-bleu‚tre
+bleuâ€štre
 blew
 blewits
 blewitses
@@ -4423,8 +4423,8 @@ bodges
 bodgie
 bodgies
 bodging
-bodhr·n
-bodhr·ns
+bodhrÂ·n
+bodhrÂ·ns
 bodice
 bodices
 bodied
@@ -6267,7 +6267,7 @@ bruit
 bruited
 bruiting
 bruits
-br°le
+brËšle
 brulyie
 brulyies
 brulzie

@@ -2565,8 +2565,8 @@ entreats
 entreaty
 entrechat
 entrechats
-entrecÙte
-entrecÙtes
+entrecÃ™te
+entrecÃ™tes
 entrEe
 entrEes
 entremets
@@ -3504,7 +3504,7 @@ esperance
 espial
 espials
 espied
-espiËgle
+espiÃ‹gle
 espies
 espionage
 espionages
