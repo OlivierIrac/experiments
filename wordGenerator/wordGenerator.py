@@ -14,7 +14,7 @@ class WordGenerator:
     # a=0, b=1, ..., z=25, space=26
     # dupletsProba[char1][char2] stores probability of char1 followed by char 2, normalized so that row sum=1 to be able to use numpy.random.choice
     # tripletsProba [char1][char2][char3] stores number of occurrences of char1 followed by char2 followed by char3
-    __alphabet=['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z',' ','-','\'','ç','á','é','ú','à','è','ì','ù','â','ê','î','ô','û','ä','ë','ï','ö','ü','Ã','ß']
+    __alphabet=['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z',' ','’','-','\'','œ','ç','á','é','ú','à','À','è','ì','ù','â','ê','î','ô','û','ä','ë','ï','ö','ü','Ã','ß']
     __space=__alphabet.index(' ')
     __tableSize=len(__alphabet)
     
@@ -90,7 +90,7 @@ class WordGenerator:
                                     self.__tripletsProba[WordGenerator.__space][self.__charToIndex(line[0])][self.__charToIndex(line[1])] +=1
                                 for j in range (len(line)-1):
                                     if (line[j+1]!="\r" and line[j+1]!="\n"):
-                                        # did not reach end of word, store duplet normally and store triplet if next char is still not eof word
+                                        # break words on end of line or comma, store duplet normally and store triplet if next char is still not eof word
                                         self.__dupletsProba[self.__charToIndex(line[j])][self.__charToIndex(line[j+1])] +=1
                                         if (j<len(line)-2):
                                             if (line[j+2]!="\r" and line[j+2]!="\n"):
@@ -150,9 +150,11 @@ class WordGenerator:
         return word            
     
 # main           
+#wordGenerator=WordGenerator("English")
 #wordGenerator=WordGenerator("English Open Word List (EOWL)")
 #wordGenerator=WordGenerator("Italiano")
 #wordGenerator=WordGenerator("francais full")
-wordGenerator=WordGenerator("German")
+wordGenerator=WordGenerator("francais top 1750",True)
+#wordGenerator=WordGenerator("German")
 for _ in range (200):
     print (wordGenerator.createRandomWord(), end="")
