@@ -8,6 +8,8 @@ Created on 6 juil. 2017
 import os
 import random
 import pickle
+import sys
+import argparse
 from numpy.random import choice
 
 class WordGenerator:
@@ -88,7 +90,7 @@ class WordGenerator:
                 self.__dupletsProba=pickle.load(fp)
             with open(os.path.join(self.__workingDirectory,"tripletsproba.sav"), 'rb') as fp:
                 self.__tripletsProba=pickle.load(fp)
-            self.verbosePrint ("Loaded probability tables from ", os.path.join(self.__workingDirectory,"dupletsproba.sav"), os.path.join(self.__workingDirectory,"tripletsproba.sav"))
+            self.__verbosePrint ("Loaded probability tables from ", os.path.join(self.__workingDirectory,"dupletsproba.sav"), os.path.join(self.__workingDirectory,"tripletsproba.sav"))
         
         else:    
             # analayse each .txt file and fill duplets and triplets proba tables, store tables in .sav files 
@@ -98,8 +100,8 @@ class WordGenerator:
                     wordCount=0
                     errorCount=0
                     try:
-                        for line in open(os.path.join(self.__workingDirectory,filename),encoding="utf8"):
-                        #for line in open(os.path.join(self.__workingDirectory,filename)):
+                        #for line in open(os.path.join(self.__workingDirectory,filename),encoding="utf8"):
+                        for line in open(os.path.join(self.__workingDirectory,filename)):
                             wordCount+=1
                             try:
                                 # consider word starts with space
@@ -120,7 +122,7 @@ class WordGenerator:
                                         # consider word ends with space
                                         self.__dupletsProba[self.__charToIndex(line[j])][WordGenerator.__space] +=1
                             except ValueError as e:
-                                print ("Line", wordCount, e)
+                                self.__verbosePrint ("Line", wordCount, e)
                                 errorCount+=1       
                     except UnicodeDecodeError as e:
                         print(e)  
@@ -170,11 +172,17 @@ class WordGenerator:
         return word            
     
 # main           
-#wordGenerator=WordGenerator("English",True)
-#wordGenerator=WordGenerator("English Open Word List (EOWL)")
-#wordGenerator=WordGenerator("Italiano",True)
-#wordGenerator=WordGenerator("francais 22000")
-#wordGenerator=WordGenerator("francais top 1750")
-wordGenerator=WordGenerator("German",True)
-for _ in range (200):
-    print (wordGenerator.createRandomWord(5,10))
+parser = argparse.ArgumentParser(description = "WordGenerator allows to generate random words based on language statistics.")
+parser.add_argument("-l", "--language", help = "en, fr (default), de, it, sh", required = False, default = "fr")
+parser.add_argument("-n", "--number", help = "number of words to generate, default 20", required = False, default = 20)
+parser.add_argument("-min", "--minletters", help = "minimum number of letters per word, default 3", required = False, default = 3)
+parser.add_argument("-max", "--maxletters", help = "maximum number of letters per word, default 10", required = False, default = 10)
+parser.add_argument("-s", "--startletter", help = "forces word to start with a specific letter", required = False, default = "")
+parser.add_argument("-c", "--creativity", help = "1-10, lower values are more creative but can give strange words, higher values more conservative", required = False, default = 4)
+parser.add_argument("-f", "--force", help = "force tables generation instead of using .sav files, True/False(default)", required = False, default = False)
+parser.add_argument("-v", "--verbose", help = "prints additional information, True/False(default)", required = False, default = False)
+argument = parser.parse_args()
+dictionary={'en':"English",'fr':"francais full", 'de':"German", 'it':"Italiano",'sh':"Shadok"}
+wordGenerator=WordGenerator(dictionary[argument.language], argument.force, argument.verbose)
+for _ in range (int(argument.number)):
+    print (wordGenerator.createRandomWord(int(argument.minletters),int(argument.maxletters),argument.startletter,int(argument.creativity)))
