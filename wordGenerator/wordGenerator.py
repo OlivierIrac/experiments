@@ -11,20 +11,24 @@ import pickle
 from numpy.random import choice
 
 class WordGenerator:
-    # a=0, b=1, ..., z=25, space=26
-    # dupletsProba[char1][char2] stores probability of char1 followed by char 2, normalized so that row sum=1 to be able to use numpy.random.choice
+    # dupletsProba[char1][char2] stores probability of char1 followed by char 2
     # tripletsProba [char1][char2][char3] stores number of occurrences of char1 followed by char2 followed by char3
+    # tables are normalized so that row sum=1 to be able to use numpy.random.choice duplets[char1], triplets [char1][char2]
     __alphabet=['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z',' ','’','-','\'','œ','ç','á','é','ú','à','À','è','ì','ù','â','ê','î','ô','û','ä','ë','ï','ö','ü','Ã','ß']
     __space=__alphabet.index(' ')
     __tableSize=len(__alphabet)
     
+    def __verbosePrint(self,*args):
+        if (self.__verbose):
+            print (*args)
+            
     def __charToIndex(self,char):
         try:
             return WordGenerator.__alphabet.index(char)
         except ValueError:
             raise ValueError ("Cannot decode character",char)
         
-    def __normalizeProba (self,verbose=False):
+    def __normalizeProba (self):
         for i in range (WordGenerator.__tableSize):
             dupletsSum=0
             for j in range (WordGenerator.__tableSize):
@@ -38,16 +42,16 @@ class WordGenerator:
                     except ZeroDivisionError:
                         pass    
                     
-            if (dupletsSum==0 and verbose):
-                print ("No letter",WordGenerator.__alphabet[i])
+            if (dupletsSum==0):
+                self.__verbosePrint("No letter",WordGenerator.__alphabet[i])
             else:
                 for j in range (WordGenerator.__tableSize):
                     try:
                         self.__dupletsProba[i][j]/=dupletsSum
                     except ZeroDivisionError:
                         pass
-                    if (self.__dupletsProba[i][j]==0 and verbose):
-                        print("Empty proba", WordGenerator.__alphabet[i], WordGenerator.__alphabet[j])
+                    if (self.__dupletsProba[i][j]==0):
+                        self.__verbosePrint("Empty proba", WordGenerator.__alphabet[i], WordGenerator.__alphabet[j])
 
                 
     def saveDupletsProbaAsCsv (self):
@@ -71,10 +75,11 @@ class WordGenerator:
     
 
         
-    def __init__(self,directory,forceProbaTablesUpdate=False):
+    def __init__(self,directory,forceProbaTablesUpdate=False,verbose=False):
         self.__dupletsProba=[ [ 0 for _ in range(WordGenerator.__tableSize) ] for _ in range(WordGenerator.__tableSize) ]
         self.__tripletsProba=[ [ [ 0 for _ in range(WordGenerator.__tableSize) ] for _ in range(WordGenerator.__tableSize) ] for _ in range(WordGenerator.__tableSize) ]
         self.__workingDirectory=directory
+        self.__verbose=verbose
         
         random.seed()
         if (not forceProbaTablesUpdate and os.path.isfile(os.path.join(self.__workingDirectory,"dupletsproba.sav")) and os.path.isfile(os.path.join(self.__workingDirectory,"tripletsproba.sav"))):
@@ -83,7 +88,7 @@ class WordGenerator:
                 self.__dupletsProba=pickle.load(fp)
             with open(os.path.join(self.__workingDirectory,"tripletsproba.sav"), 'rb') as fp:
                 self.__tripletsProba=pickle.load(fp)
-            # print ("Loaded probability tables from ", os.path.join(self.__workingDirectory,"dupletsproba.sav"), os.path.join(self.__workingDirectory,"tripletsproba.sav"))
+            self.verbosePrint ("Loaded probability tables from ", os.path.join(self.__workingDirectory,"dupletsproba.sav"), os.path.join(self.__workingDirectory,"tripletsproba.sav"))
         
         else:    
             # analayse each .txt file and fill duplets and triplets proba tables, store tables in .sav files 
