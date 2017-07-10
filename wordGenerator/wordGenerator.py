@@ -171,17 +171,17 @@ class WordGenerator:
         return word            
     
 # main           
-parser = argparse.ArgumentParser(description = "WordGenerator allows to generate random words based on language statistics.")
-parser.add_argument("-l", "--language", help = "en, fr (default), de, it, sh", required = False, default = "fr")
-parser.add_argument("-n", "--number", help = "number of words to generate, default 20", required = False, default = 20)
-parser.add_argument("-min", "--minletters", help = "minimum number of letters per word, default 3", required = False, default = 3)
-parser.add_argument("-max", "--maxletters", help = "maximum number of letters per word, default 100", required = False, default = 100)
-parser.add_argument("-s", "--startletter", help = "forces word to start with a specific letter", required = False, default = "")
-parser.add_argument("-c", "--creativity", help = "1-10, lower values are more creative but can give strange words, higher values more conservative", required = False, default = 4)
-parser.add_argument("-f", "--force", help = "force tables generation instead of using .sav files, True/False(default)", required = False, default = False)
-parser.add_argument("-v", "--verbose", help = "prints additional information, True/False(default)", required = False, default = False)
+parser = argparse.ArgumentParser(description = "WordGenerator generates random words based on language statistics.")
+parser.add_argument("-language", choices=['en', 'fr', 'de', 'it', 'sh'], help = "fr if omitted", default = "fr")
+parser.add_argument("-numberofwords",  help = "number of words to generate, default 20", type=int, default = 20)
+parser.add_argument("-minwordsize", help = "minimum number of letters per word, default 3", type=int, default = 3)
+parser.add_argument("-maxwordsize", help = "maximum number of letters per word, default 100", type=int, default = 100)
+parser.add_argument("-firstletter", help = "forces words first letter", default = "")
+parser.add_argument("-creativity", help = "1-10, lower values are more creative but can generate strange words, higher values are more conservative", type=int, default = 4)
+parser.add_argument("-rebuild", help = "rebuild language probability tables", default = False, action='store_true')
+parser.add_argument("-verbose", help = "prints additional information", default = False, action='store_true')
 argument = parser.parse_args()
 dictionary={'en':"English",'fr':"francais full", 'de':"German", 'it':"Italiano",'sh':"Shadok"}
-wordGenerator=WordGenerator(dictionary[argument.language], argument.force, argument.verbose)
-for _ in range (int(argument.number)):
-    print (wordGenerator.createRandomWord(int(argument.minletters),int(argument.maxletters),argument.startletter,int(argument.creativity)))
+wordGenerator=WordGenerator(dictionary[argument.language], argument.rebuild, argument.verbose)
+for _ in range (argument.numberofwords):
+    print (wordGenerator.createRandomWord(argument.minwordsize,argument.maxwordsize,argument.firstletter,argument.creativity))
