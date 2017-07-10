@@ -8,7 +8,6 @@ Created on 6 juil. 2017
 import os
 import random
 import pickle
-import sys
 import argparse
 from numpy.random import choice
 
@@ -176,7 +175,7 @@ parser = argparse.ArgumentParser(description = "WordGenerator allows to generate
 parser.add_argument("-l", "--language", help = "en, fr (default), de, it, sh", required = False, default = "fr")
 parser.add_argument("-n", "--number", help = "number of words to generate, default 20", required = False, default = 20)
 parser.add_argument("-min", "--minletters", help = "minimum number of letters per word, default 3", required = False, default = 3)
-parser.add_argument("-max", "--maxletters", help = "maximum number of letters per word, default 10", required = False, default = 10)
+parser.add_argument("-max", "--maxletters", help = "maximum number of letters per word, default 100", required = False, default = 100)
 parser.add_argument("-s", "--startletter", help = "forces word to start with a specific letter", required = False, default = "")
 parser.add_argument("-c", "--creativity", help = "1-10, lower values are more creative but can give strange words, higher values more conservative", required = False, default = 4)
 parser.add_argument("-f", "--force", help = "force tables generation instead of using .sav files, True/False(default)", required = False, default = False)
