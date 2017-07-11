@@ -78,8 +78,7 @@ class WordGenerator:
 
     def __init__(self, directory, forceProbaTablesUpdate=False, verbose=False):
         self.__dupletsProba = [[0 for _ in range(WordGenerator.__tableSize)] for _ in range(WordGenerator.__tableSize)]
-        self.__tripletsProba = [[[0 for _ in range(WordGenerator.__tableSize)] for _ in range(WordGenerator.__tableSize)]
-                                for _ in range(WordGenerator.__tableSize)]
+        self.__tripletsProba = [[[0 for _ in range(WordGenerator.__tableSize)] for _ in range(WordGenerator.__tableSize)]for _ in range(WordGenerator.__tableSize)]
         self.__workingDirectory = directory
         self.__verbose = verbose
 
@@ -90,8 +89,7 @@ class WordGenerator:
                 self.__dupletsProba = pickle.load(fp)
             with open(os.path.join(self.__workingDirectory, "tripletsproba.sav"), 'rb') as fp:
                 self.__tripletsProba = pickle.load(fp)
-            self.__verbosePrint("Loaded probability tables from ", os.path.join(self.__workingDirectory,
-                                                                                "dupletsproba.sav"), os.path.join(self.__workingDirectory, "tripletsproba.sav"))
+            self.__verbosePrint("Loaded probability tables from ", os.path.join(self.__workingDirectory, "dupletsproba.sav"), os.path.join(self.__workingDirectory, "tripletsproba.sav"))
 
         else:
             # analayse each .txt file and fill duplets and triplets proba tables, store tables in .sav files
@@ -119,18 +117,20 @@ class WordGenerator:
                             try:
                                 # consider word starts with space
                                 self.__dupletsProba[WordGenerator.__space][self.__charToIndex(line[0])] += 1
-                                self.__tripletsProba[WordGenerator.__space][WordGenerator.__space][self.__charToIndex(line[0])] += 1
+                                self.__tripletsProba[WordGenerator.__space][WordGenerator.__space][self.__charToIndex(
+                                    line[0])] += 1
                                 if (len(line) > 2):
                                     # store triplet only if word is at least space-char1-char2
-                                    self.__tripletsProba[WordGenerator.__space][self.__charToIndex(line[0])][self.__charToIndex(line[1])] += 1
+                                    self.__tripletsProba[WordGenerator.__space][self.__charToIndex(
+                                        line[0])][self.__charToIndex(line[1])] += 1
                                 for j in range(len(line) - 1):
                                     if (line[j + 1] != "\r" and line[j + 1] != "\n"):
-                                        # break words on end of line or comma, store duplet normally and store triplet if next char is still not eof word
+                                        # break words on end of line or comma, store duplet normally and store
+                                        # triplet if next char is still not eof word
                                         self.__dupletsProba[self.__charToIndex(line[j])][self.__charToIndex(line[j + 1])] += 1
                                         if (j < len(line) - 2):
                                             if (line[j + 2] != "\r" and line[j + 2] != "\n"):
-                                                self.__tripletsProba[self.__charToIndex(line[j])][self.__charToIndex(
-                                                    line[j + 1])][self.__charToIndex(line[j + 2])] += 1
+                                                self.__tripletsProba[self.__charToIndex(line[j])][self.__charToIndex(line[j + 1])][self.__charToIndex(line[j + 2])] += 1
                                             else:
                                                 self.__tripletsProba[self.__charToIndex(line[j])][self.__charToIndex(line[j + 1])][WordGenerator.__space] += 1
                                     else:
@@ -165,9 +165,9 @@ class WordGenerator:
                     newLetterCandidates.append(choice(WordGenerator.__alphabet, p=self.__dupletsProba[self.__charToIndex(previousLetter)]))
                 maxTripletProba = 0
                 for letter in newLetterCandidates:
-                    if (self.__tripletsProba[self.__charToIndex(previousPreviousLetter)][self.__charToIndex(previousLetter)][self.__charToIndex(letter)] >= maxTripletProba):
-                        maxTripletProba = self.__tripletsProba[self.__charToIndex(
-                            previousPreviousLetter)][self.__charToIndex(previousLetter)][self.__charToIndex(letter)]
+                    currentTripletProba = self.__tripletsProba[self.__charToIndex(previousPreviousLetter)][self.__charToIndex(previousLetter)][self.__charToIndex(letter)]
+                    if (currentTripletProba >= maxTripletProba):
+                        maxTripletProba = currentTripletProba
                         newLetter = letter
         return newLetter
 
