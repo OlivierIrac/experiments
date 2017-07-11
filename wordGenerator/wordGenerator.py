@@ -105,6 +105,7 @@ class WordGenerator:
                             try:
                                 # consider word starts with space
                                 self.__dupletsProba[WordGenerator.__space][self.__charToIndex(line[0])] +=1
+                                self.__tripletsProba[WordGenerator.__space][WordGenerator.__space][self.__charToIndex(line[0])] +=1
                                 if (len(line)>2):
                                     # store triplet only if word is at least space-char1-char2 
                                     self.__tripletsProba[WordGenerator.__space][self.__charToIndex(line[0])][self.__charToIndex(line[1])] +=1
@@ -133,7 +134,8 @@ class WordGenerator:
             with open(os.path.join(self.__workingDirectory,"tripletsproba.sav"), 'wb') as fp:
                 pickle.dump(self.__tripletsProba, fp)
         
-    def __selectNextLetter(self,previousLetter,previousPreviousLetter="",nbCandidates=1):   
+    def __selectNextLetterBasedOnDupletsCandidates(self,previousLetter,previousPreviousLetter="",nbCandidates=1):   
+        # Draw nbCandidates letters from duplets probability table and select final candidate from from triplets highest proba 
         if (previousLetter==" "):
             # Draw 1st letter
             newLetter=choice(WordGenerator.__alphabet, p=self.__dupletsProba[WordGenerator.__space])
@@ -141,8 +143,7 @@ class WordGenerator:
             if (previousPreviousLetter==""):
                 # Do not use triplets
                 newLetter=choice(WordGenerator.__alphabet, p=self.__dupletsProba[self.__charToIndex(previousLetter)])
-            else:
-                # Draw nbCandidates letters from duplets probability and select best match from triplets 
+            else:                
                 newLetterCandidates=[]
                 for _ in range (nbCandidates):            
                     newLetterCandidates.append(choice(WordGenerator.__alphabet, p=self.__dupletsProba[self.__charToIndex(previousLetter)]))
@@ -152,6 +153,9 @@ class WordGenerator:
                         maxTripletProba=self.__tripletsProba[self.__charToIndex(previousPreviousLetter)][self.__charToIndex(previousLetter)][self.__charToIndex(letter)]
                         newLetter=letter                
         return newLetter          
+
+    def __selectNextLetter(self,previousLetter,previousPreviousLetter=" ",nbCandidates=0):   
+        return choice(WordGenerator.__alphabet, p=self.__tripletsProba[self.__charToIndex(previousPreviousLetter)][self.__charToIndex(previousLetter)])          
         
     def createRandomWord(self, minLen=1, maxLen=100, firstLetter="", nbCandidates=4):
         # higher number of candidates means less creative words
