@@ -168,38 +168,45 @@ class WordGenerator:
                         newLetter=letter                
         return newLetter          
 
-    def __selectNextLetter(self,previousLetter,previousPreviousLetter=" ",nbCandidates=0):   
+    def __selectNextLetterBasedOnTriplets(self,previousLetter,previousPreviousLetter=" ",nbCandidates=0):   
         return choice(WordGenerator.__alphabet, p=self.__tripletsProba[self.__charToIndex(previousPreviousLetter)][self.__charToIndex(previousLetter)])          
         
-    def createRandomWord(self, minLen=1, maxLen=100, firstLetter="", nbCandidates=4):
-        # higher number of candidates means less creative words
+    def createRandomWord(self, minLen=1, maxLen=100, firstLetter="", algorithm="duplets", nbCandidates=4):
+        # for duplets algo, lower values for nbCandidates are more creative but can generate strange words, higher values are more conservative
+        # for triplets algo, nbCandidates is not used
+        if (algorithm=="duplets"):
+            selectNextLetter=self.__selectNextLetterBasedOnDupletsCandidates
+        else: 
+            selectNextLetter=self.__selectNextLetterBasedOnTriplets
+            
         word=""
         while (len(word)-1<minLen or len(word)-1>maxLen):
             word=""
             # select first letter
             if (firstLetter==""):
-                word+=self.__selectNextLetter(" ")
+                word+=selectNextLetter(" ")
             else:
                 word+=firstLetter
             # select second letter
-            word+=self.__selectNextLetter(word[len(word)-1]," ", nbCandidates)
+            word+=selectNextLetter(word[len(word)-1]," ", nbCandidates)
             # select next letters
             while (word[len(word)-1]!=" "):
-                word+=self.__selectNextLetter(word[len(word)-1], word[len(word)-2], nbCandidates)                            
+                word+=selectNextLetter(word[len(word)-1], word[len(word)-2], nbCandidates)                            
         return word            
     
 # main           
-parser = argparse.ArgumentParser(description = "WordGenerator generates random words based on language statistics.")
-parser.add_argument("-language", choices=['en', 'fr', 'de', 'it', 'sh'], help = "fr if omitted", default = "fr")
-parser.add_argument("-numberofwords",  help = "number of words to generate, default 20", type=int, default = 20)
-parser.add_argument("-minwordsize", help = "minimum number of letters per word, default 3", type=int, default = 3)
-parser.add_argument("-maxwordsize", help = "maximum number of letters per word, default 100", type=int, default = 100)
+parser = argparse.ArgumentParser(description = "WordGenerator generates random words based on language statistics.", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+parser.add_argument("-language", choices=['en', 'fr', 'de', 'it', 'sh'], help=" ", default = "fr")
+parser.add_argument("-numberofwords",  help = "number of words to generate", type=int, default = 20)
+parser.add_argument("-minwordsize", help = "minimum number of letters per word", type=int, default = 3)
+parser.add_argument("-maxwordsize", help = "maximum number of letters per word", type=int, default = 100)
 parser.add_argument("-firstletter", help = "forces words first letter", default = "")
-parser.add_argument("-creativity", help = "1-10, lower values are more creative but can generate strange words, higher values are more conservative", type=int, default = 4)
+parser.add_argument("-algorithm", choices=['duplets', 'triplets'], help = "algorithm for letter random selection", default = "triplets")
+parser.add_argument("-creativity", help = "Used only for duplets algorithm. Recommended values 1-10. Lower values are more creative but can generate strange words, higher values are more conservative", type=int, default = 4)
 parser.add_argument("-rebuild", help = "rebuild language probability tables", default = False, action='store_true')
 parser.add_argument("-verbose", help = "prints additional information", default = False, action='store_true')
 argument = parser.parse_args()
 dictionary={'en':"English",'fr':"francais full", 'de':"German", 'it':"Italiano",'sh':"Shadok"}
 wordGenerator=WordGenerator(dictionary[argument.language], argument.rebuild, argument.verbose)
 for _ in range (argument.numberofwords):
-    print (wordGenerator.createRandomWord(argument.minwordsize,argument.maxwordsize,argument.firstletter,argument.creativity))
+    print (wordGenerator.createRandomWord(argument.minwordsize,argument.maxwordsize,argument.firstletter,argument.algorithm,argument.creativity))
