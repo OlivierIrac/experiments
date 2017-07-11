@@ -9,13 +9,14 @@ import os
 import random
 import pickle
 import argparse
+import cchardet
 from numpy.random import choice
 
 class WordGenerator:
     # dupletsProba[char1][char2] stores probability of char1 followed by char 2
     # tripletsProba [char1][char2][char3] stores number of occurrences of char1 followed by char2 followed by char3
     # tables are normalized so that row sum=1 to be able to use numpy.random.choice duplets[char1], triplets [char1][char2]
-    __alphabet=['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z',' ','’','-','\'','œ','ç','á','é','ú','à','À','è','ì','ù','â','ê','î','ô','û','ä','ë','ï','ö','ü','Ã','ß']
+    __alphabet=['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z',' ','’','-','\'','œ','ç','á','é','ú','à','À','è','ì','ò','ù','â','ê','î','ô','û','ä','ë','ï','ö','ü','Ã','Ä','ß']
     __space=__alphabet.index(' ')
     __tableSize=len(__alphabet)
     
@@ -99,8 +100,20 @@ class WordGenerator:
                     wordCount=0
                     errorCount=0
                     try:
-                        #for line in open(os.path.join(self.__workingDirectory,filename),encoding="utf8"):
-                        for line in open(os.path.join(self.__workingDirectory,filename)):
+                        # check file encoding and open file accordingly 
+                        with open(os.path.join(self.__workingDirectory,filename),'rb') as f:
+                            msg=f.read()
+                        result=cchardet.detect(msg)
+                        self.__verbosePrint(result)
+                        f.close()
+                        
+                        if (result['encoding']=='UTF-8-SIG'):
+                            f=open(os.path.join(self.__workingDirectory,filename),encoding="utf8")
+                        else:
+                            f=open(os.path.join(self.__workingDirectory,filename))
+                        
+                        # parse each line from the file and populates proba tables. Assuming one word per line
+                        for line in f:
                             wordCount+=1
                             try:
                                 # consider word starts with space
@@ -122,8 +135,9 @@ class WordGenerator:
                                         # consider word ends with space
                                         self.__dupletsProba[self.__charToIndex(line[j])][WordGenerator.__space] +=1
                             except ValueError as e:
-                                self.__verbosePrint ("Line", wordCount, e)
-                                errorCount+=1       
+                                print ("Line", wordCount, e)
+                                errorCount+=1
+                        f.close()       
                     except UnicodeDecodeError as e:
                         print(e)  
                     print (wordCount,"words parsed,",errorCount,"errors")  
