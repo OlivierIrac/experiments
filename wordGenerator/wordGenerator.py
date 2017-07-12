@@ -199,6 +199,7 @@ class WordGenerator:
 
 
 # main
+# added dummy comment
 parser = argparse.ArgumentParser(description="WordGenerator generates random words based on language statistics.",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument("-language", choices=['en', 'fr', 'de', 'it', 'sh'], help=" ", default="fr")
