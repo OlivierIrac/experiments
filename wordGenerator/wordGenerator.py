@@ -93,6 +93,7 @@ class WordGenerator:
 
         else:
             # analayse each .txt file and fill duplets and triplets proba tables, store tables in .sav files
+            wordFound = False
             for filename in os.listdir(self.__workingDirectory):
                 if filename.endswith('.txt'):
                     print(os.path.join(self.__workingDirectory, filename))
@@ -114,6 +115,7 @@ class WordGenerator:
                         # parse each line from the file and populates proba tables. Assuming one word per line
                         for line in f:
                             wordCount += 1
+                            wordFound = True
                             try:
                                 # consider word starts with space
                                 self.__dupletsProba[WordGenerator.__space][self.__charToIndex(line[0])] += 1
@@ -144,11 +146,14 @@ class WordGenerator:
                         print(e)
                     print(wordCount, "words parsed,", errorCount, "errors")
 
-            self.__normalizeProba()
-            with open(os.path.join(self.__workingDirectory, "dupletsproba.sav"), 'wb') as fp:
-                pickle.dump(self.__dupletsProba, fp)
-            with open(os.path.join(self.__workingDirectory, "tripletsproba.sav"), 'wb') as fp:
-                pickle.dump(self.__tripletsProba, fp)
+            if (not wordFound):
+                raise ValueError("No language .txt or .sav files found in directory", directory)
+            else:
+                self.__normalizeProba()
+                with open(os.path.join(self.__workingDirectory, "dupletsproba.sav"), 'wb') as fp:
+                    pickle.dump(self.__dupletsProba, fp)
+                with open(os.path.join(self.__workingDirectory, "tripletsproba.sav"), 'wb') as fp:
+                    pickle.dump(self.__tripletsProba, fp)
 
     def __selectNextLetterBasedOnDupletsCandidates(self, previousLetter, previousPreviousLetter="", nbCandidates=1):
         # Draw nbCandidates letters from duplets probability table and select final candidate from from triplets highest proba
@@ -201,7 +206,7 @@ class WordGenerator:
 # main
 parser = argparse.ArgumentParser(description="WordGenerator generates random words based on language statistics.",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-parser.add_argument("-language", choices=['en', 'fr', 'de', 'it', 'sh'], help=" ", default="fr")
+parser.add_argument("-language", choices=['en', 'fr', 'de', 'it', 'sh', 'dir'], help="dir to use current directory", default="fr")
 parser.add_argument("-numberofwords", help="number of words to generate", type=int, default=20)
 parser.add_argument("-minwordsize", help="minimum number of letters per word", type=int, default=3)
 parser.add_argument("-maxwordsize", help="maximum number of letters per word", type=int, default=100)
@@ -211,7 +216,13 @@ parser.add_argument("-creativity", help="Used only for duplets algorithm. Recomm
 parser.add_argument("-rebuild", help="rebuild language probability tables", default=False, action='store_true')
 parser.add_argument("-verbose", help="prints additional information", default=False, action='store_true')
 argument = parser.parse_args()
-dictionary = {'en': "English", 'fr': "francais full", 'de': "German", 'it': "Italiano", 'sh': "Shadok"}
-wordGenerator = WordGenerator(dictionary[argument.language], argument.rebuild, argument.verbose)
-for _ in range(argument.numberofwords):
-    print(wordGenerator.createRandomWord(argument.minwordsize, argument.maxwordsize, argument.firstletter, argument.algorithm, argument.creativity))
+
+languageDirectory = {'en': "English", 'fr': "francais full", 'de': "German", 'it': "Italiano", 'sh': "Shadok", 'dir': "."}
+directory = languageDirectory[argument.language]
+
+try:
+    wordGenerator = WordGenerator(directory, argument.rebuild, argument.verbose)
+    for _ in range(argument.numberofwords):
+        print(wordGenerator.createRandomWord(argument.minwordsize, argument.maxwordsize, argument.firstletter, argument.algorithm, argument.creativity))
+except ValueError as e:
+    print (e)
