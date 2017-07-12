@@ -174,7 +174,7 @@ class WordGenerator:
     def __selectNextLetterBasedOnTriplets(self, previousLetter, previousPreviousLetter=" ", unused=0):
         return choice(WordGenerator.__alphabet, p=self.__tripletsProba[self.__charToIndex(previousPreviousLetter)][self.__charToIndex(previousLetter)])
 
-    def createRandomWord(self, minLen=1, maxLen=100, firstLetter="", algorithm="duplets", nbCandidates=4):
+    def createRandomWord(self, minLen=1, maxLen=100, firstLetter="", algorithm="triplets", nbCandidates=4):
         # for duplets algo, lower values for nbCandidates are more creative but can generate strange words, higher values are more conservative
         # for triplets algo, nbCandidates is not used
         if (algorithm == "duplets"):
