@@ -4,7 +4,7 @@ Created on 19 juil. 2017
 
 @author: irac1
 '''
-import wordGenerator.WordGenerator as WordGenerator
+from wordGenerator import WordGenerator
 
 print ("Content-type: text/html\n\n")
 
