@@ -4,7 +4,7 @@ Created on 19 juil. 2017
 @author: irac1
 '''
 
-from wordGenerator import WordGenerator
+import wordGenerator.WordGenerator as WordGenerator
 import argparse
 
 # main
