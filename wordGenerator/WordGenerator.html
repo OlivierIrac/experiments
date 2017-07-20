@@ -138,10 +138,10 @@ Generates random "realistic" words based on language statistics.
 <input type="number" size=1 id="max" name="max" value="12" min="2" max="100">
 <br>
 <label for="algo">Algorithm</label>
-<input type="radio" id="algo" name="algo" value="triplets" checked> Triplets 
-<input type="radio" id="algo" name="algo" value="duplets"> Pairs
-<label for="nbcandidates">N =</label> 
-<input type="number" size=1 id="nbcandidates" name="nbcandidates" value="3" min="1" max="10">
+<input type="radio" id="algotriplets" name="algo" value="triplets" checked> Triplets 
+<input type="radio" id="algopairs" name="algo" value="duplets"> Pairs
+<label for="nbcandidates">with N =</label> 
+<input type="number" size=1 id="nbcandidates" name="nbcandidates" value="3" min="1" max="10" onclick="document.getElementById('algopairs').checked=true">
 <div class="tooltip">info
   <span class="tooltiptext">Language statistics are built by parsing list of words and storing probabilities for pairs (letter 1 followed by letter 2) and triplets (letter 1 followed by letter 2 followed by letter 3).
 <br><br>Triplets algorithm: the next letter is selected based on triplets probabilities.
