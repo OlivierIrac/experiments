@@ -100,6 +100,13 @@ div {
 }
 </style>
 
+<script>
+function target_popup(form) {
+    window.open('', 'formpopup', 'width=400,height=400,resizeable,scrollbars');
+    form.target = 'formpopup';
+}
+</script>
+
 <head>
 <title>Word Generator</title>
 </head>
@@ -108,7 +115,7 @@ div {
 <h1>Word Generator</h1>
 Generates random "realistic" words based on language statistics. 
 <div>
-<form name="myform" action="http://olivieri.heliohost.org/cgi-bin/cgiWordGenerator.py" method="POST">
+<form name="myform" action="http://olivieri.heliohost.org/cgi-bin/cgiWordGenerator.py" method="POST" onsubmit="target_popup(this)">
 <input type="submit" value="Generate words !">   
 <br>
 <label for="language">Language</label>
@@ -142,9 +149,6 @@ Generates random "realistic" words based on language statistics.
 <br><br>N=1 means triplets probabilities are not used. 
 <br>Lower N values generate more creative but less realistic words.</span>
 </div>
-<br>
-<br>
-<input type="reset" value="Reset to default values">
 </form>
 </div>
 </div>
