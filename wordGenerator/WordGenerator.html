@@ -1,3 +1,5 @@
+<meta name="viewport" content="width=device-width, initial-scale=0.95", user-scalable=no">
+
 <html>
 <style>
 
@@ -129,26 +131,35 @@ Generates random "realistic" words based on language statistics.
 <br>
 <label for="nbwords">Number of words</label>
 <input type="number" size=1 id="nbwords" name="nbwords" min="1" max="100" value="20">
+<br>
 <label for="firstletter">First letter</label>
 <input type="text" size=1 id="firstletter" name="firstletter" maxlength="1" value="">
 <br>
 <label for="min">Min number of letters</label>
 <input type="number" size=1 id="min" name="min" value="5" min="1" max="100">
+<br>
 <label for="max">Max number of letters</label>
 <input type="number" size=1 id="max" name="max" value="12" min="2" max="100">
 <br>
 <label for="algo">Algorithm</label>
-<input type="radio" id="algotriplets" name="algo" value="triplets" checked> Triplets 
-<input type="radio" id="algopairs" name="algo" value="duplets"> Pairs
+<br><input type="radio" id="algotriplets" name="algo" value="triplets" checked> Triplets 
+<br><input type="radio" id="algopairs" name="algo" value="duplets"> Pairs
 <label for="nbcandidates">with N =</label> 
 <input type="number" size=1 id="nbcandidates" name="nbcandidates" value="3" min="1" max="10" onclick="document.getElementById('algopairs').checked=true">
+<!-- Do not display this at the moment
 <div class="tooltip">info
-  <span class="tooltiptext">Language statistics are built by parsing list of words and storing probabilities for pairs (letter 1 followed by letter 2) and triplets (letter 1 followed by letter 2 followed by letter 3).
+  <span class="tooltiptext">
+-->
+<br><br>
+Additional info: 
+Language statistics are built by parsing list of words and storing probabilities for pairs (letter 1 followed by letter 2) and triplets (letter 1 followed by letter 2 followed by letter 3).
 <br><br>Triplets algorithm: the next letter is selected based on triplets probabilities.
 <br><br>Pairs algorithm: N letters are pre-selected based on pairs probabilities from which the letter maximizing triplets probability is selected. 
 <br><br>N=1 means triplets probabilities are not used. 
 <br>Lower N values generate more creative but less realistic words.</span>
+<!-- Do not display this at the moment
 </div>
+-->
 </form>
 </div>
 </div>
