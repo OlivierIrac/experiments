@@ -246,8 +246,9 @@ def main():
         print(nbDices, "dices roll:")
         print("max score =", maxScore)
         print("average score per roll =", totalScore / combination)
+        print("average score per non nul roll =", nonZeroTotalScore / nonZeroCombination)
         print(combination, "combinations")
-        print(combination - nonZeroCombination, "zero combinations =", 100 * (combination - nonZeroCombination) / combination, "%")
+        print(combination - nonZeroCombination, "nul combinations =", 100 * (combination - nonZeroCombination) / combination, "%")
         print()
         
 
