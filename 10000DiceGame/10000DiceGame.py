@@ -36,6 +36,9 @@ class Player:
 
     def decideNextMove(self, diceRoll):
         raise NotImplementedError('You need to define a speak method!')
+    
+    def addTurnScore(self, score):
+        self.turnScore += score
 
     def endTurn(self, turnScore=True):
         if(turnScore):
@@ -50,6 +53,8 @@ class ComputerPlayer(Player):
     def decideNextMove(self, diceRoll):
         print("Computer", self.name)
         print(diceRoll)
+        (diceKept, score) = self.game.evaluateDiceRoll(diceRoll)
+        return (False, diceKept)
 
 
 class HumanPlayer(Player):
@@ -127,7 +132,20 @@ class FarkleDiceGame:
             self.players[currentPlayer].startTurn()
             turnOver = False
             while (not turnOver):
-                self.players[currentPlayer].decideNextMove(self.rollDices(6))
+                (keepPlaying, diceKept) = self.players[currentPlayer].decideNextMove(self.rollDices(6))
+                (_, turnScore) = self.evaluateDiceRoll(diceKept)
+                self.players[currentPlayer].addTurnScore(turnScore)
+                if(turnScore == 0):
+                    self.players[currentPlayer].endTurn(False)
+                    turnOver = True
+                elif (not keepPlaying):
+                    self.players[currentPlayer].endTurn(True)
+                    turnOver = True
+
+            if (currentPlayer < len(self.players)):
+                currentPlayer += 1
+            else:
+                currentPlayer = 0
 
     def evaluateDiceRoll(self, diceRoll):
         score = 0
@@ -303,17 +321,20 @@ def randomCheck():
         print (game.evaluateDiceRoll(diceRoll))
         print()
 
+
 def playAGame():
     game = FarkleDiceGame()
     game.addPlayer("Olivier", "human")
     game.addPlayer("Ordi")
     game.play()
 
+
 def main():
     random.seed()
     log.basicConfig(format="%(levelname)s: %(message)s", level=50)
 #    testCases()
-    randomCheck()
-#    playAGame()
+#    randomCheck()
+    playAGame()
+
 
 main()
