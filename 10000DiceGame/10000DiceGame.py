@@ -76,7 +76,6 @@ class ComputerPlayer(Player):
         self.riskFactor = riskFactor
 
     def decideNextMove(self, diceRoll):
-        
         (diceKept, score) = self.game.evaluateDiceRoll(diceRoll)
         self.status(diceRoll)
         if(not self.hasStarted):
