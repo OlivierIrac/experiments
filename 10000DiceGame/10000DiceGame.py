@@ -45,19 +45,21 @@ class Player:
         print("\n----- Next player -----")
 
     def decideNextMove(self, diceRoll):
-        raise NotImplementedError('You need to define a speak method!')
+        raise NotImplementedError()  # pure virtual
 
     def addTurnScore(self, score, dicesKept):
         self.turnScore += score
         if(len(dicesKept) > 0):
             self.turnDicesKept += dicesKept
+        else:
+            self.turnDicesKept = []
 
     def status(self, diceRoll=[]):
         print (self.name, "Roll:", diceRoll, "Kept:", self.turnDicesKept, "Turn score:", self.turnScore, "Total score:", self.score)
 
     def endTurn(self, turnScore, diceRoll):
         if(turnScore):
-            if(self.hasStarted or self.turnScore >= 750):
+            if(self.hasStarted or self.turnScore >= FarkleDiceGame.START_SCORE):
                 self.score += self.turnScore
                 self.hasStarted = True
         else:
@@ -72,10 +74,24 @@ class ComputerPlayer(Player):
 
     def decideNextMove(self, diceRoll):
         (diceKept, score) = self.game.evaluateDiceRoll(diceRoll)
-        if(score + self.turnScore > 350):
-            return (True, diceKept)
+        self.status(diceRoll)
+        if(not self.hasStarted):
+            # not started, keep playing until reach score required for start
+            if(score + self.turnScore < FarkleDiceGame.START_SCORE):
+                return (True, diceKept)
+            else:
+                return (False, diceKept)
         else:
-            return (False, diceKept)
+            # started
+            # evaluate benefit of continuing
+            scoreIfDoNotContinue = score + self.turnScore
+            remainingDices = len(diceRoll) - len(diceKept)
+            potentialScoreIfContinue = self.game.gameStats[remainingDices].nonZeroCombination / self.game.gameStats[remainingDices].combination * (score + self.turnScore + self.game.gameStats[remainingDices].nonZeroTotalScore / self.game.gameStats[remainingDices].nonZeroCombination)
+            print(scoreIfDoNotContinue, potentialScoreIfContinue)
+            if(potentialScoreIfContinue > self.riskFactor * scoreIfDoNotContinue):
+                return (True, diceKept)
+            else:
+                return (False, diceKept)
 
 
 class HumanPlayer(Player):
@@ -117,7 +133,8 @@ class FarkleDiceGame:
     STRAIGHT_SCORE = 2000
     ONE_SCORE = 100
     FIVE_SCORE = 50
-    WIN_SCORE = 1000
+    WIN_SCORE = 10000
+    START_SCORE = 750
 
     def __init__(self):
         self.players = []
@@ -383,7 +400,7 @@ def randomCheck():
 
 def playAGame():
     game = FarkleDiceGame()
-    game.addPlayer("Louis", "human")
+#    game.addPlayer("Louis", "human")
     game.addPlayer("Olivier", "human")
     game.addPlayer("Ordi")
     game.play()
