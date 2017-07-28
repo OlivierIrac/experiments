@@ -6,6 +6,13 @@ Created on 26 juil. 2017
 import random
 import logging as log
 
+verboseLevel = 2
+
+
+def verbose(level, *args):
+    if(level > verboseLevel):
+        print(*args)
+
 
 class GameStatistics:
     def __init__(self):
@@ -30,19 +37,32 @@ class Player:
         self.score = 0
         self.game = game
         self.turnScore = 0
+        self.hasStarted = False
 
     def startTurn(self):
         self.turnScore = 0
+        self.turnDicesKept = []
+        print("\n----- Next player -----")
 
     def decideNextMove(self, diceRoll):
         raise NotImplementedError('You need to define a speak method!')
-    
-    def addTurnScore(self, score):
-        self.turnScore += score
 
-    def endTurn(self, turnScore=True):
+    def addTurnScore(self, score, dicesKept):
+        self.turnScore += score
+        if(len(dicesKept) > 0):
+            self.turnDicesKept += dicesKept
+
+    def status(self, diceRoll=[]):
+        print (self.name, "Roll:", diceRoll, "Kept:", self.turnDicesKept, "Turn score:", self.turnScore, "Total score:", self.score)
+
+    def endTurn(self, turnScore, diceRoll):
         if(turnScore):
-            self.score += self.turnScore
+            if(self.hasStarted or self.turnScore >= 750):
+                self.score += self.turnScore
+                self.hasStarted = True
+        else:
+            print("Too bad !!!")
+        self.status(diceRoll)
 
 
 class ComputerPlayer(Player):
@@ -51,10 +71,11 @@ class ComputerPlayer(Player):
         self.riskFactor = riskFactor
 
     def decideNextMove(self, diceRoll):
-        print("Computer", self.name)
-        print(diceRoll)
         (diceKept, score) = self.game.evaluateDiceRoll(diceRoll)
-        return (False, diceKept)
+        if(score + self.turnScore > 350):
+            return (True, diceKept)
+        else:
+            return (False, diceKept)
 
 
 class HumanPlayer(Player):
@@ -62,9 +83,28 @@ class HumanPlayer(Player):
         super().__init__(game, name)
 
     def decideNextMove(self, diceRoll):
-        print("Human", self.name)
-        print(diceRoll)
-        input("your choice")
+        self.status(diceRoll)
+        diceKept = []
+        diceAvail = diceRoll
+        (diceAllowed, _) = self.game.evaluateDiceRoll(diceRoll)
+        done = False
+        while(not done):
+            dice = input("keep dice (empty to end)? ")
+            if (dice in ['1', '2', '3', '4', '5', '6']):
+                dice = int(dice)
+                if (dice in diceAvail and dice in diceAllowed):
+                    diceKept.append(dice)
+                    diceAvail.remove(dice)
+                else:
+                    print("Not allowed")
+            else:
+                done = True
+        keepPlaying = input("Continue (y/n)?")
+        if(keepPlaying == "n" and (len(diceAvail) != 0)):
+            keepPlaying = False
+        else:
+            keepPlaying = True
+        return (keepPlaying, diceKept)
 
 
 class FarkleDiceGame:
@@ -77,6 +117,7 @@ class FarkleDiceGame:
     STRAIGHT_SCORE = 2000
     ONE_SCORE = 100
     FIVE_SCORE = 50
+    WIN_SCORE = 1000
 
     def __init__(self):
         self.players = []
@@ -85,7 +126,7 @@ class FarkleDiceGame:
         for i in FarkleDiceGame.dice:
             self.gameStats.append(self.__computeStatistics(i))
             msg = str(i) + " dices\n" + self.gameStats[i - 1].print()
-            log.log(12, msg)
+            verbose(2, msg)
 
     def __keepOnes(self, diceRoll, diceKept, score):
         score += FarkleDiceGame.ONE_SCORE * diceRoll.count(1)
@@ -118,6 +159,8 @@ class FarkleDiceGame:
     def addPlayer(self, name="", kind="computer", riskFactor=1.0):
         if(kind == "computer"):
             self.players.append(ComputerPlayer(self, name, riskFactor))
+        if(kind == "human"):
+            self.players.append(HumanPlayer(self, name))
 
     def rollDices(self, nbDices):
         diceRoll = []
@@ -128,23 +171,39 @@ class FarkleDiceGame:
     def play(self):
         gameOver = False
         currentPlayer = 0
+        print(len(self.players), "players:")
+        for player in self.players:
+            print (player.name)
         while(not gameOver):
             self.players[currentPlayer].startTurn()
             turnOver = False
+            nbDicesToThrow = 6
             while (not turnOver):
-                (keepPlaying, diceKept) = self.players[currentPlayer].decideNextMove(self.rollDices(6))
-                (_, turnScore) = self.evaluateDiceRoll(diceKept)
-                self.players[currentPlayer].addTurnScore(turnScore)
-                if(turnScore == 0):
-                    self.players[currentPlayer].endTurn(False)
+                diceRoll = self.rollDices(nbDicesToThrow)
+                (_, maxScore) = self.evaluateDiceRoll(diceRoll)
+                if(maxScore == 0):
+                    self.players[currentPlayer].endTurn(False, diceRoll)
                     turnOver = True
-                elif (not keepPlaying):
-                    self.players[currentPlayer].endTurn(True)
-                    turnOver = True
+                else:
+                    (keepPlaying, diceKept) = self.players[currentPlayer].decideNextMove(diceRoll)
+                    (_, turnScore) = self.evaluateDiceRoll(diceKept)
+                    nbDicesToThrow -= len(diceKept)
+                    if(nbDicesToThrow <= 0):
+                        nbDicesToThrow = 6
+                        diceKept = []
+                    self.players[currentPlayer].addTurnScore(turnScore, diceKept)
+                    if(turnScore == 0 or self.players[currentPlayer].score + self.players[currentPlayer].turnScore > FarkleDiceGame.WIN_SCORE):
+                        self.players[currentPlayer].endTurn(False, diceRoll)
+                        turnOver = True
+                    elif (not keepPlaying):
+                        self.players[currentPlayer].endTurn(True, diceRoll)
+                        turnOver = True
+            if (self.players[currentPlayer].score == FarkleDiceGame.WIN_SCORE):
+                print(self.players[currentPlayer].name, "wins !!!")
+                gameOver = True
 
-            if (currentPlayer < len(self.players)):
-                currentPlayer += 1
-            else:
+            currentPlayer += 1
+            if (currentPlayer == len(self.players)):
                 currentPlayer = 0
 
     def evaluateDiceRoll(self, diceRoll):
@@ -158,19 +217,19 @@ class FarkleDiceGame:
         if (len(diceRoll) >= 4):
             # check for dreaded 4 x 2 => 0
             if (diceRoll.count(2) == 4):
-                log.log(11, "Four twos found")
+                verbose(1, "Four twos found")
                 return (diceKept, 0)
 
         if (len(diceRoll) == 6):
             # check for sextuplet
             for i in range(1, 7):
                 if (diceRoll.count(i) == 6):
-                    log.log(11, "Sextuplet found : " + str(i))
+                    verbose(1, "Sextuplet found : " + str(i))
                     diceKept = diceRoll
                     return (diceKept, FarkleDiceGame.SEXTUPLET_SCORE)
             # check for straight 1, 2, 3, 4, 5, 6
             if (diceRoll[0] == 1 and diceRoll[1] == 2 and diceRoll[2] == 3 and diceRoll[3] == 4 and diceRoll[4] == 5 and diceRoll[5] == 6):
-                log.log(11, "Straight found")
+                verbose(1, "Straight found")
                 diceKept = diceRoll
                 return (diceKept, FarkleDiceGame.STRAIGHT_SCORE)
 
@@ -178,7 +237,7 @@ class FarkleDiceGame:
             # check for quintuplet
             for i in range(1, 7):
                 if (diceRoll.count(i) == 5):
-                    log.log(11, "Quintuplet found : " + str(i))
+                    verbose(1, "Quintuplet found : " + str(i))
                     score = FarkleDiceGame.QUINTUPLET_SCORE
                     diceKept = [x for x in diceRoll if x == i]
                     # check for additional one or five (sextuplets of ones and fives already taken care of above)
@@ -195,7 +254,7 @@ class FarkleDiceGame:
             # check for quadruplet
             for i in range(1, 7):
                 if (diceRoll.count(i) == 4):
-                    log.log(11, "Quadruplet found : " + str(i))
+                    verbose(1, "Quadruplet found : " + str(i))
                     score = FarkleDiceGame.QUADRUPLET_SCORE
                     diceKept = [x for x in diceRoll if x == i]
                     # check for additional ones or fives (sextuplets of ones and fives already taken care of above)
@@ -210,13 +269,13 @@ class FarkleDiceGame:
         if (len(diceRoll) >= 3):
             # check for three ones
             if (diceRoll.count(1) == 3):
-                log.log(11, "Three ones found")
+                verbose(1, "Three ones found")
                 score = FarkleDiceGame.THREE_ONES_SCORE
                 diceKept = [1, 1, 1]
                 # check for another triplet
                 for i in range(2, 7):
                     if (diceRoll.count(i) == 3):
-                        log.log(11, "Second triplet found : " + str(i))
+                        verbose(1, "Second triplet found : " + str(i))
                         score += FarkleDiceGame.TRIPLETS_BASE_SCORE * i
                         diceKept += [x for x in diceRoll if x == i]
                 # check for additional fives, additional ones already taken care of by quadruplets, ... above
@@ -231,14 +290,14 @@ class FarkleDiceGame:
                 twoTripletsFound = False
                 fiveTripletFound = False
                 if (diceRoll.count(i) == 3):
-                    log.log(11, "Triplet found : " + str(i))
+                    verbose(1, "Triplet found : " + str(i))
                     if (i == 5):
                         fiveTripletFound = True
                     score = FarkleDiceGame.TRIPLETS_BASE_SCORE * i
                     diceKept = [x for x in diceRoll if x == i]
                     for j in range(i + 1, 7):
                         if (diceRoll.count(j) == 3):
-                            log.log(11, "Second triplet found : " + str(j))
+                            verbose(1, "Second triplet found : " + str(j))
                             twoTripletsFound = True
                             if (j == 5):
                                 fiveTripletFound = True
@@ -254,7 +313,7 @@ class FarkleDiceGame:
                     return (diceKept, score)
 
         # no special combination found, return score for isolated ones and fives
-        log.log(11, "No combination found")
+        verbose(1, "No combination found")
         (diceKept, score) = self.__keepOnes(diceRoll, diceKept, score)
         (diceKept, score) = self.__keepFives(diceRoll, diceKept, score)
         return (diceKept, score)
@@ -324,6 +383,7 @@ def randomCheck():
 
 def playAGame():
     game = FarkleDiceGame()
+    game.addPlayer("Louis", "human")
     game.addPlayer("Olivier", "human")
     game.addPlayer("Ordi")
     game.play()
