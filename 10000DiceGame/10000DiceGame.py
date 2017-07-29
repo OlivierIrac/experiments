@@ -6,6 +6,7 @@ Created on 26 juil. 2017
 import random
 import logging as log
 
+# TODO: verbose with types
 verboseLevel = 2
 
 
@@ -76,14 +77,13 @@ class ComputerPlayer(Player):
         self.riskFactor = riskFactor
 
     def decideNextMove(self, diceRoll):
-        (diceKept, score) = self.game.evaluateDiceRoll(diceRoll)
+        (diceKept, score) = self.game.evaluateDices(diceRoll)
         self.status(diceRoll)
         if(not self.hasStarted):
             # not started, keep playing until reach score required for start
             if(score + self.turnScore < FarkleDiceGame.START_SCORE):
                 return (True, diceKept)
             else:
-                # TODO: must continue if 6 dices selected
                 return (False, diceKept)
         else:
             # started
@@ -94,13 +94,11 @@ class ComputerPlayer(Player):
             potentialScoreIfContinue = self.game.gameStats[remainingDices].nonZeroCombination / self.game.gameStats[remainingDices].combination * (score + self.turnScore + self.game.gameStats[remainingDices].nonZeroTotalScore / self.game.gameStats[remainingDices].nonZeroCombination)
             # TODO: implement optimization for discarding 1 or 5
             print(scoreIfDoNotContinue, potentialScoreIfContinue, self.riskFactor * potentialScoreIfContinue)
-            # TODO: test different risk factors against each other
-            if(self.riskFactor * potentialScoreIfContinue > scoreIfDoNotContinue):
+            if(self.riskFactor * potentialScoreIfContinue > scoreIfDoNotContinue and self.score + potentialScoreIfContinue < FarkleDiceGame.WIN_SCORE):
+                # continue if potential score by throwing dices again > current score and does not exceed win score
                 return (True, diceKept)
             else:
-                # TODO: must continue if 6 dices selected
                 return (False, diceKept)
-            # TODO: optimize end game
 
 
 class HumanPlayer(Player):
@@ -111,7 +109,7 @@ class HumanPlayer(Player):
         self.status(diceRoll)
         diceKept = []
         diceAvail = diceRoll
-        (diceAllowed, _) = self.game.evaluateDiceRoll(diceRoll)
+        (diceAllowed, _) = self.game.evaluateDices(diceRoll)
         done = False
         keepPlaying = True
         while(not done):
@@ -126,20 +124,18 @@ class HumanPlayer(Player):
                 else:
                     # TODO: separate user interaction
                     print("Not allowed")
-            elif (dice == 's'):
+            elif (dice != ''):
                 done = True
                 keepPlaying = False
             else:
                 done = True
-
-        # TODO: separate check of valid user inputs / selections
-        if(len(diceAvail) == 0):
-            keepPlaying = True
+        # FIXME: check that hand is still valid (possible refactor in game class) ex. from 1, 2, 2, 2 currently possible to take 1, 2
         return (keepPlaying, diceKept)
 
 
 class FarkleDiceGame:
     dice = [1, 2, 3, 4, 5, 6]
+    # TODO: extract rules in separate class
     SEXTUPLET_SCORE = 5000
     QUINTUPLET_SCORE = 2500
     QUADRUPLET_SCORE = 1000
@@ -156,6 +152,7 @@ class FarkleDiceGame:
         self.gameStats = []
         self.turn = 0
         random.seed()
+        # TODO: save / restore stats to file
         for i in FarkleDiceGame.dice:
             self.gameStats.append(self.__computeStatistics(i))
             msg = str(i) + " dices\n" + self.gameStats[i - 1].print()
@@ -178,7 +175,7 @@ class FarkleDiceGame:
         if(nbDices == 1):
             for dice in FarkleDiceGame.dice:
                 stats.combination += 1
-                (_, score) = self.evaluateDiceRoll(diceRoll + [dice])
+                (_, score) = self.evaluateDices(diceRoll + [dice])
                 stats.totalScore += score
                 if (score != 0):
                     stats.nonZeroCombination += 1
@@ -216,15 +213,16 @@ class FarkleDiceGame:
             nbDicesToThrow = 6
             while (not turnOver):
                 diceRoll = self.rollDices(nbDicesToThrow)
-                (_, maxScore) = self.evaluateDiceRoll(diceRoll)
+                (_, maxScore) = self.evaluateDices(diceRoll)
                 if(maxScore == 0):
                     self.players[currentPlayer].endTurn(False, diceRoll)
                     turnOver = True
                 else:
-                    (keepPlaying, diceKept) = self.players[currentPlayer].decideNextMove(diceRoll)
-                    (_, turnScore) = self.evaluateDiceRoll(diceKept)
+                    (keepPlaying, diceKept) = self.players[currentPlayer].decideNextMove(diceRoll)                        
+                    (_, turnScore) = self.evaluateDices(diceKept)
                     nbDicesToThrow -= len(diceKept)
                     if(nbDicesToThrow <= 0):
+                        keepPlaying = True  # must continue if no more dice
                         nbDicesToThrow = 6
                         diceKept = []
                     self.players[currentPlayer].addTurnScore(turnScore, diceKept)
@@ -248,8 +246,7 @@ class FarkleDiceGame:
                 turn += 1
         return currentPlayer
 
-    # TODO: rename to evaluateDices
-    def evaluateDiceRoll(self, diceRoll):
+    def evaluateDices(self, diceRoll):
         score = 0
         # TODO: avoid sort (used only for straight detection)
         diceRoll.sort()
@@ -409,7 +406,7 @@ def testCases():
     for diceRoll in testRolls:
         print(diceRoll)
         try:
-            print(game.evaluateDiceRoll(diceRoll))
+            print(game.evaluateDices(diceRoll))
         except ValueError as e:
             print (e)
         print()
@@ -421,13 +418,13 @@ def randomCheck():
         nbDices = random.choice(FarkleDiceGame.dice)
         diceRoll = game.rollDices(nbDices)
         print (diceRoll)
-        print (game.evaluateDiceRoll(diceRoll))
+        print (game.evaluateDices(diceRoll))
         print()
 
 
-def playAGame():
+def playComputersGame():
     winners = [0 for _ in range(5)]
-    for _ in range(100):
+    for i in range(100):
         game = FarkleDiceGame()
 #    game.addPlayer("Louis", "human")
 #    game.addPlayer("Olivier", "human")
@@ -438,14 +435,24 @@ def playAGame():
         game.addPlayer("Ordi 2.0", "computer", 2.0)
         winner = game.play()
         winners[winner - 1] += 1
+        print("Game #", i)
     print(winners)
+
+
+def playHumanVsComputerGame():
+    game = FarkleDiceGame()
+#    game.addPlayer("Louis", "human")
+    game.addPlayer("Olivier", "human")
+    game.addPlayer("Ordi 1.0")
+    game.play()
 
 
 def main():
     log.basicConfig(format="%(levelname)s: %(message)s", level=50)
-#    testCases()
-#    randomCheck()
-    playAGame()
+    # testCases()
+    # randomCheck()
+    # playHumanVsComputerGame()
+    playComputersGame()
 
 
 main()
