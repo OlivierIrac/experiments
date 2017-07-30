@@ -97,10 +97,7 @@ class Player:
 
     def addTurnScore(self, score, dicesKept):
         self.turnScore += score
-        if(len(dicesKept) > 0):
-            self.turnDicesKept += dicesKept
-        else:
-            self.turnDicesKept = []
+        self.turnDicesKept += dicesKept + [' ']
 
     def endTurn(self, turnScore, diceRoll):
         if(turnScore):
@@ -244,8 +241,6 @@ class FarkleDiceGame:
                     if(nbDicesToThrow <= 0):
                         keepPlaying = True  # must continue if no more dice
                         nbDicesToThrow = 6
-                        diceKept = []
-                    # FIXME: if all dices kept, previous line empties diceKept before updating UI, need two separate UI updates?
                     self.players[currentPlayer].addTurnScore(turnScore, diceKept)
                     self.updateUI(self, "UserSelectedDices", currentPlayer, diceRoll, diceKept)
                     if(turnScore == 0 or self.players[currentPlayer].score + self.players[currentPlayer].turnScore > FarkleDiceGame.WIN_SCORE):
@@ -451,6 +446,7 @@ def randomCheck():
 
 def updateConsoleUI(game, event, currentPlayer=0, diceRoll=[], dicesKept=[]):
     print (event, game.players[currentPlayer].name, "Roll:", diceRoll, "Kept:", dicesKept, "Turn score:", game.players[currentPlayer].turnScore, "Total score:", game.players[currentPlayer].score)
+    print (game.players[currentPlayer].turnDicesKept)
 
 
 def playComputersGame():
