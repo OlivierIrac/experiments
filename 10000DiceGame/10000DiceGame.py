@@ -10,31 +10,30 @@ import pickle
 
 def verbose(category, *args):
     verboseFilter = [  # "evaluateDices",
-                     # "gameStatistics",
-                     "computerPlayer"
-                     ]
+                    # "gameStatistics",
+                    "computerPlayer"
+                    ]  # @IgnorePep8
     if(category in verboseFilter):
-        print(*args)
+        print(category, ":", *args)
 
 
 class GameStatistics:
-    def __init__(self):
-        self.totalScore = 0
-        self.nonZeroTotalScore = 0
-        self.combination = 0
-        self.nonZeroCombination = 0
-        self.maxScore = 0
+    class StatisticsPerNbDice:
+        def __init__(self):
+            self.totalScore = 0
+            self.nonZeroTotalScore = 0
+            self.combination = 0
+            self.nonZeroCombination = 0
+            self.maxScore = 0
 
-    def print(self):
-        msg = "max score = " + str(self.maxScore) + "\n"
-        msg += "average score per roll = " + str(self.totalScore / self.combination) + "\n"
-        msg += "average score per non nul roll = " + repr(self.nonZeroTotalScore / self.nonZeroCombination) + "\n"
-        msg += str(self.combination) + " combinations\n"
-        msg += str(self.combination - self.nonZeroCombination) + " nul combinations = " + repr(100 * (self.combination - self.nonZeroCombination) / self.combination) + "% \n"
-        return msg
+        def print(self):
+            msg = "max score = " + str(self.maxScore) + "\n"
+            msg += "average score per roll = " + str(self.totalScore / self.combination) + "\n"
+            msg += "average score per non nul roll = " + repr(self.nonZeroTotalScore / self.nonZeroCombination) + "\n"
+            msg += str(self.combination) + " combinations\n"
+            msg += str(self.combination - self.nonZeroCombination) + " nul combinations = " + repr(100 * (self.combination - self.nonZeroCombination) / self.combination) + "% \n"
+            return msg
 
-
-class FullGameStatistics:
     def __init__(self, forceUpdate=False):
         filename = "gameStatistics.sav"
         if (not forceUpdate and os.path.isfile(filename)):
@@ -61,7 +60,7 @@ class FullGameStatistics:
 
     def __computeStatistics(self, nbDices, diceRoll=[], stats=0, init=True):
         if(init):
-            stats = GameStatistics()
+            stats = GameStatistics.StatisticsPerNbDice()
         if(nbDices == 1):
             for dice in FarkleDiceGame.dice:
                 stats.combination += 1
@@ -77,12 +76,12 @@ class FullGameStatistics:
                 stats = self.__computeStatistics(nbDices - 1, diceRoll + [dice], stats, False)
         return stats
 
-    def computePotentialScore (self, nbDiceToThrow, currentTurnScore):
+    def computePotentialScore(self, nbDiceToThrow, currentTurnScore):
         return self.gameStats[nbDiceToThrow].nonZeroCombination / self.gameStats[nbDiceToThrow].combination * (currentTurnScore + self.gameStats[nbDiceToThrow].nonZeroTotalScore / self.gameStats[nbDiceToThrow].nonZeroCombination)
 
 
 class Player:
-    def __init__(self, game, name=""):
+    def __init__(self, game, name):
         self.name = name
         self.score = 0
         self.game = game
@@ -92,8 +91,6 @@ class Player:
     def startTurn(self):
         self.turnScore = 0
         self.turnDicesKept = []
-        # TODO: separate user interaction
-        print("\n----- Next player -----")
 
     def decideNextMove(self, diceRoll):
         raise NotImplementedError()  # pure virtual
@@ -105,19 +102,11 @@ class Player:
         else:
             self.turnDicesKept = []
 
-    def status(self, diceRoll=[]):
-        # TODO: separate user interaction
-        print (self.name, "Roll:", diceRoll, "Kept:", self.turnDicesKept, "Turn score:", self.turnScore, "Total score:", self.score)
-
     def endTurn(self, turnScore, diceRoll):
         if(turnScore):
             if(self.hasStarted or self.turnScore >= FarkleDiceGame.START_SCORE):
                 self.score += self.turnScore
                 self.hasStarted = True
-        else:
-            # TODO: separate user interaction
-            print("Too bad !!!")
-        self.status(diceRoll)
 
 
 class ComputerPlayer(Player):
@@ -127,7 +116,6 @@ class ComputerPlayer(Player):
 
     def decideNextMove(self, diceRoll):
         (diceKept, score) = FarkleDiceGame.evaluateDices(diceRoll)
-        self.status(diceRoll)
         if(not self.hasStarted):
             # not started, keep playing until reach score required for start
             if(score + self.turnScore < FarkleDiceGame.START_SCORE):
@@ -154,14 +142,15 @@ class HumanPlayer(Player):
         super().__init__(game, name)
 
     def decideNextMove(self, diceRoll):
-        self.status(diceRoll)
         diceKept = []
+        # FIXME: diceRoll emptied at the end of user selection
         diceAvail = diceRoll
         (diceAllowed, _) = FarkleDiceGame.evaluateDices(diceRoll)
         done = False
         keepPlaying = True
         while(not done):
             # TODO: separate user interaction
+            print(diceAvail)
             dice = input("keep dice (empty to end)? ")
             if (dice in ['1', '2', '3', '4', '5', '6']):
                 dice = int(dice)
@@ -195,19 +184,21 @@ class FarkleDiceGame:
     WIN_SCORE = 10000
     START_SCORE = 750
 
-    def __init__(self):
+    def __init__(self, updateUI):
         self.players = []
-        self.gameStats = []
         self.turn = 0
-        self.gameStats = FullGameStatistics()
+        self.gameStats = GameStatistics()
+        self.updateUI = updateUI
         random.seed()
 
+    @staticmethod
     def __keepOnes(diceRoll, diceKept, score):
         score += FarkleDiceGame.ONE_SCORE * diceRoll.count(1)
         diceKept += [1 for _ in range(diceRoll.count(1))]
         verbose("evaluateDices", diceRoll.count(1), "single ones found")
         return (diceKept, score)
 
+    @staticmethod
     def __keepFives(diceRoll, diceKept, score):
         score += FarkleDiceGame.FIVE_SCORE * diceRoll.count(5)
         diceKept += [5 for _ in range(diceRoll.count(5))]
@@ -235,6 +226,7 @@ class FarkleDiceGame:
         turn = 1
         while(not gameOver):
             self.players[currentPlayer].startTurn()
+            self.updateUI(self, "startTurn", currentPlayer)
             turnOver = False
             # TODO: implement turn follow up (resume from dices from previous player)
             nbDicesToThrow = 6
@@ -243,6 +235,7 @@ class FarkleDiceGame:
                 (_, maxScore) = FarkleDiceGame.evaluateDices(diceRoll)
                 if(maxScore == 0):
                     self.players[currentPlayer].endTurn(False, diceRoll)
+                    self.updateUI(self, "endTurnBadThrow", currentPlayer, diceRoll)
                     turnOver = True
                 else:
                     (keepPlaying, diceKept) = self.players[currentPlayer].decideNextMove(diceRoll)
@@ -252,12 +245,16 @@ class FarkleDiceGame:
                         keepPlaying = True  # must continue if no more dice
                         nbDicesToThrow = 6
                         diceKept = []
+                    # FIXME: if all dices kept, previous line empties diceKept before updating UI, need two separate UI updates?
                     self.players[currentPlayer].addTurnScore(turnScore, diceKept)
+                    self.updateUI(self, "UserSelectedDices", currentPlayer, diceRoll, diceKept)
                     if(turnScore == 0 or self.players[currentPlayer].score + self.players[currentPlayer].turnScore > FarkleDiceGame.WIN_SCORE):
                         self.players[currentPlayer].endTurn(False, diceRoll)
+                        self.updateUI(self, "endTurnNoScore", currentPlayer, diceRoll, diceKept)
                         turnOver = True
                     elif (not keepPlaying):
                         self.players[currentPlayer].endTurn(True, diceRoll)
+                        self.updateUI(self, "endTurnScores", currentPlayer, diceRoll, diceKept)
                         turnOver = True
             if (self.players[currentPlayer].score == FarkleDiceGame.WIN_SCORE):
                 # TODO: separate user interaction
@@ -273,6 +270,7 @@ class FarkleDiceGame:
                 turn += 1
         return currentPlayer
 
+    @staticmethod
     def evaluateDices(diceRoll):
         score = 0
         diceKept = []
@@ -431,7 +429,7 @@ def testCases():
                  [4, 4, 4, 1, 5, 6]
                  ]
 
-    game = FarkleDiceGame()
+    FarkleDiceGame(updateConsoleUI)
     for diceRoll in testRolls:
         print(diceRoll)
         try:
@@ -442,7 +440,7 @@ def testCases():
 
 
 def randomCheck():
-    game = FarkleDiceGame()
+    game = FarkleDiceGame(updateConsoleUI)
     for _ in range(20):
         nbDices = random.choice(FarkleDiceGame.dice)
         diceRoll = game.rollDices(nbDices)
@@ -451,10 +449,14 @@ def randomCheck():
         print()
 
 
+def updateConsoleUI(game, event, currentPlayer=0, diceRoll=[], dicesKept=[]):
+    print (event, game.players[currentPlayer].name, "Roll:", diceRoll, "Kept:", dicesKept, "Turn score:", game.players[currentPlayer].turnScore, "Total score:", game.players[currentPlayer].score)
+
+
 def playComputersGame():
     winners = [0 for _ in range(5)]
     for i in range(100):
-        game = FarkleDiceGame()
+        game = FarkleDiceGame(updateConsoleUI)
 #    game.addPlayer("Louis", "human")
 #    game.addPlayer("Olivier", "human")
         game.addPlayer("Ordi 0.5", "computer", 0.5)
@@ -469,7 +471,7 @@ def playComputersGame():
 
 
 def playHumanVsComputerGame():
-    game = FarkleDiceGame()
+    game = FarkleDiceGame(updateConsoleUI)
 #    game.addPlayer("Louis", "human")
     game.addPlayer("Olivier", "human")
     game.addPlayer("Ordi 1.0")
@@ -479,8 +481,8 @@ def playHumanVsComputerGame():
 def main():
     # testCases()
     # randomCheck()
-    # playHumanVsComputerGame()
-    playComputersGame()
+    playHumanVsComputerGame()
+    # playComputersGame()
 
 
 main()
