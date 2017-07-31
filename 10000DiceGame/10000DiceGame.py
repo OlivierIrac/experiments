@@ -6,7 +6,7 @@ Created on 26 juil. 2017
 import random
 import os
 import pickle
-
+from termcolor import cprint
 
 def verbose(category, *args):
     verboseFilter = [  # "evaluateDices",
@@ -88,11 +88,14 @@ class Player:
         self.turnScore = 0
         self.hasStarted = False
 
-    def startTurn(self):
-        self.turnScore = 0
+    def startTurn(self, turnScore):
+        self.turnScore = turnScore
         self.turnDicesKept = []
 
     def decideNextMove(self, diceRoll):
+        raise NotImplementedError()  # pure virtual
+
+    def wantToFollowUp(self, score, nbDices):
         raise NotImplementedError()  # pure virtual
 
     def addTurnScore(self, score, dicesKept):
@@ -110,6 +113,9 @@ class ComputerPlayer(Player):
     def __init__(self, game, name="", riskFactor=1.0):
         super().__init__(game, name)
         self.riskFactor = riskFactor
+
+    def wantToFollowUp(self, score, nbDices):
+        return False
 
     def decideNextMove(self, diceRoll):
         (diceKept, score) = FarkleDiceGame.evaluateDices(diceRoll)
@@ -138,17 +144,24 @@ class HumanPlayer(Player):
     def __init__(self, game, name=""):
         super().__init__(game, name)
 
+    def wantToFollowUp(self, score, nbDices):
+        msg = "Do you want to follow-up on " + str(score) + " points with " + str(nbDices) + " dices? (y/n)"
+        key = input(msg)
+        if(key == "y"):
+            return True
+        else:
+            return False
+
     def decideNextMove(self, diceRoll):
         diceKept = []
-        # FIXME: diceRoll emptied at the end of user selection
-        diceAvail = diceRoll
+        diceAvail = list(diceRoll)  # makes a copy
         (diceAllowed, _) = FarkleDiceGame.evaluateDices(diceRoll)
         done = False
         keepPlaying = True
         while(not done):
             # TODO: separate user interaction
-            print(diceAvail)
-            dice = input("keep dice (empty to end)? ")
+            msg = "Select from:" + str(diceAvail) + "(empty to end & continue, anykey for end & stop turn) :"
+            dice = input(msg)
             if (dice in ['1', '2', '3', '4', '5', '6']):
                 dice = int(dice)
                 # TODO: separate check of valid user inputs / selections
@@ -178,8 +191,8 @@ class FarkleDiceGame:
     STRAIGHT_SCORE = 2000
     ONE_SCORE = 100
     FIVE_SCORE = 50
-    WIN_SCORE = 10000
-    START_SCORE = 750
+    WIN_SCORE = 2000
+    START_SCORE = 100
 
     def __init__(self, updateUI):
         self.players = []
@@ -217,20 +230,26 @@ class FarkleDiceGame:
     def play(self):
         gameOver = False
         currentPlayer = 0
+        scoreForPossibleFollowUp = 0
+        nbDicesToThrow = 6
         print(len(self.players), "players:")
         for player in self.players:
             print (player.name)
-        turn = 1
+        self.turn = 1
         while(not gameOver):
-            self.players[currentPlayer].startTurn()
             self.updateUI(self, "startTurn", currentPlayer)
             turnOver = False
-            # TODO: implement turn follow up (resume from dices from previous player)
-            nbDicesToThrow = 6
+            if(scoreForPossibleFollowUp != 0 and self.players[currentPlayer].hasStarted and self.players[currentPlayer].wantToFollowUp(scoreForPossibleFollowUp, nbDicesToThrow)):
+                # check if user want to restart from previous player last turn score & remaining dices
+                self.players[currentPlayer].startTurn(scoreForPossibleFollowUp)
+            else:
+                nbDicesToThrow = 6
+                self.players[currentPlayer].startTurn(0)
             while (not turnOver):
                 diceRoll = self.rollDices(nbDicesToThrow)
                 (_, maxScore) = FarkleDiceGame.evaluateDices(diceRoll)
                 if(maxScore == 0):
+                    scoreForPossibleFollowUp = 0  # No turn follow-up
                     self.players[currentPlayer].endTurn(False, diceRoll)
                     self.updateUI(self, "endTurnBadThrow", currentPlayer, diceRoll)
                     turnOver = True
@@ -244,25 +263,22 @@ class FarkleDiceGame:
                     self.players[currentPlayer].addTurnScore(turnScore, diceKept)
                     self.updateUI(self, "UserSelectedDices", currentPlayer, diceRoll, diceKept)
                     if(turnScore == 0 or self.players[currentPlayer].score + self.players[currentPlayer].turnScore > FarkleDiceGame.WIN_SCORE):
+                        scoreForPossibleFollowUp = 0  # No turn follow-up
                         self.players[currentPlayer].endTurn(False, diceRoll)
                         self.updateUI(self, "endTurnNoScore", currentPlayer, diceRoll, diceKept)
                         turnOver = True
                     elif (not keepPlaying):
+                        scoreForPossibleFollowUp = self.players[currentPlayer].turnScore
                         self.players[currentPlayer].endTurn(True, diceRoll)
                         self.updateUI(self, "endTurnScores", currentPlayer, diceRoll, diceKept)
                         turnOver = True
             if (self.players[currentPlayer].score == FarkleDiceGame.WIN_SCORE):
-                # TODO: separate user interaction
-                print(self.players[currentPlayer].name, "wins !!!")
-                print(turn, "turns")
-                for player in self.players:
-                    print(player.name, player.score)
+                self.updateUI(self, "gameOver", currentPlayer)
                 gameOver = True
-
             currentPlayer += 1
             if (currentPlayer == len(self.players)):
                 currentPlayer = 0
-                turn += 1
+                self.turn += 1
         return currentPlayer
 
     @staticmethod
@@ -445,8 +461,24 @@ def randomCheck():
 
 
 def updateConsoleUI(game, event, currentPlayer=0, diceRoll=[], dicesKept=[]):
-    print (event, game.players[currentPlayer].name, "Roll:", diceRoll, "Kept:", dicesKept, "Turn score:", game.players[currentPlayer].turnScore, "Total score:", game.players[currentPlayer].score)
-    print (game.players[currentPlayer].turnDicesKept)
+    if(event in ["endTurnBadThrow", "endTurnNoScore"]):
+        msg = "Roll: " + str(diceRoll) + "\n" + game.players[currentPlayer].name + " does not score. Score: " + str(game.players[currentPlayer].score) + " Dices kept:" + str(game.players[currentPlayer].turnDicesKept)
+        cprint(msg, 'white', 'on_red')
+    elif(event in ["endTurnScores"]):
+        msg = game.players[currentPlayer].name + " scores " + str(game.players[currentPlayer].turnScore) + " points. Score: " + str(game.players[currentPlayer].score) + " Dices kept:" + str(game.players[currentPlayer].turnDicesKept)
+        cprint(msg, 'white', 'on_green')
+    elif(event in ["startTurn"]):
+        msg = game.players[currentPlayer].name + " turn. Score: " + str(game.players[currentPlayer].score)
+        cprint(msg, 'white', 'on_blue')
+    elif(event in ["gameOver"]):
+        msg = game.players[currentPlayer].name + " wins !"
+        cprint(msg, 'white', 'on_cyan', attrs=['blink'])
+        print(game.turn, "turns")
+        playersByScore = sorted(game.players, key=lambda x: x.score, reverse=True)
+        for player in playersByScore:
+            print(player.name, player.score)
+    else:
+        print ("Roll:", diceRoll, "Kept:", dicesKept, "Turn score:", game.players[currentPlayer].turnScore)
 
 
 def playComputersGame():
