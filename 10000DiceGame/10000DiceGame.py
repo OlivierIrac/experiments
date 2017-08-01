@@ -77,7 +77,10 @@ class GameStatistics:
         return stats
 
     def computePotentialScore(self, nbDiceToThrow, currentTurnScore):
-        return self.gameStats[nbDiceToThrow].nonZeroCombination / self.gameStats[nbDiceToThrow].combination * (currentTurnScore + self.gameStats[nbDiceToThrow].nonZeroTotalScore / self.gameStats[nbDiceToThrow].nonZeroCombination)
+        # % chance to get non zero combination  = nonZeroCombination / combination
+        # average score for nbDices = nonZeroTotalScore / nonZeroCombination
+        # potential score = % chance to get non zero combination * (currentTurnScore + average score for nbDices)
+        return self.gameStats[nbDiceToThrow - 1].nonZeroCombination / self.gameStats[nbDiceToThrow - 1].combination * (currentTurnScore + self.gameStats[nbDiceToThrow - 1].nonZeroTotalScore / self.gameStats[nbDiceToThrow - 1].nonZeroCombination)
 
 
 class Player:
@@ -115,7 +118,15 @@ class ComputerPlayer(Player):
         self.riskFactor = riskFactor
 
     def wantToFollowUp(self, score, nbDices):
-        return False
+        potentialScoreIfFollowUp = self.game.gameStats.computePotentialScore(nbDices, score)
+        potentialScoreIfStartOver = self.game.gameStats.computePotentialScore(6, 0)
+        verbose("computerPlayer", "follow-up vs. start over:", potentialScoreIfFollowUp, potentialScoreIfStartOver)
+        if(potentialScoreIfFollowUp > potentialScoreIfStartOver):
+            verbose("computerPlayer", "IA decides to follow-up with", score, "points and", nbDices, "dices")
+            return True
+        else:
+            verbose("computerPlayer", "IA decides to start over")
+            return False
 
     def decideNextMove(self, diceRoll):
         (diceKept, score) = FarkleDiceGame.evaluateDices(diceRoll)
@@ -135,8 +146,10 @@ class ComputerPlayer(Player):
             verbose("computerPlayer", scoreIfDoNotContinue, potentialScoreIfContinue, self.riskFactor * potentialScoreIfContinue)
             if(self.riskFactor * potentialScoreIfContinue > scoreIfDoNotContinue and self.score + potentialScoreIfContinue < FarkleDiceGame.WIN_SCORE):
                 # continue if potential score by throwing dices again > current score and does not exceed win score
+                verbose("computerPlayer", "IA decides to continue")
                 return (True, diceKept)
             else:
+                verbose("computerPlayer", "IA decides to stop")
                 return (False, diceKept)
 
 
@@ -191,8 +204,8 @@ class FarkleDiceGame:
     STRAIGHT_SCORE = 2000
     ONE_SCORE = 100
     FIVE_SCORE = 50
-    WIN_SCORE = 2000
-    START_SCORE = 100
+    WIN_SCORE = 10000
+    START_SCORE = 750
 
     def __init__(self, updateUI):
         self.players = []
