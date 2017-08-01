@@ -119,7 +119,9 @@ class ComputerPlayer(Player):
         self.riskFactor = riskFactor
 
     def wantToFollowUp(self, score, nbDices):
-        # FIXME: do not follow-up if score > WIN SCORE
+        if(self.score + score > FarkleDiceGame.WIN_SCORE):
+            verbose("computerPlayer", "AI cannot follow up as score would exceed win score")
+            return False
         potentialScoreIfFollowUp = self.game.gameStats.computePotentialScore(nbDices, score)
         potentialScoreIfStartOver = self.game.gameStats.computePotentialScore(6, 0)
         verbose("computerPlayer", "follow-up vs. start over:", potentialScoreIfFollowUp, potentialScoreIfStartOver)
@@ -149,8 +151,10 @@ class ComputerPlayer(Player):
             # found one dice maximizing potential score
             diceKept.remove(diceToDiscard)
             verbose("computerPlayer", "AI decides to discard dice", diceToDiscard)
-            self.__checkIfWorthDiscarding(diceKept, remainingDices + 1, maxPotentialScore)
-            return True
+            newMaxScore = self.__checkIfWorthDiscarding(diceKept, remainingDices + 1, maxPotentialScore)
+            if (newMaxScore is not False):
+                maxPotentialScore = newMaxScore
+            return maxPotentialScore
         else:
             return False
 
@@ -162,6 +166,8 @@ class ComputerPlayer(Player):
             potentialScoreIfContinue = self.game.gameStats.computePotentialScore(remainingDices, diceScore + self.turnScore)
             self.__checkIfWorthDiscarding(diceKept, remainingDices, potentialScoreIfContinue)
             if(diceScore + self.turnScore < FarkleDiceGame.START_SCORE):
+                # decides to stop, reset diceKept to keep all dices and maximize turnScore
+                (diceKept, diceScore) = FarkleDiceGame.evaluateDices(diceRoll)
                 return (True, diceKept)
             else:
                 return (False, diceKept)
@@ -171,13 +177,18 @@ class ComputerPlayer(Player):
             scoreIfDoNotContinue = diceScore + self.turnScore
             remainingDices = len(diceRoll) - len(diceKept)
             potentialScoreIfContinue = self.game.gameStats.computePotentialScore(remainingDices, diceScore + self.turnScore)
+            newMaxScore = self.__checkIfWorthDiscarding(diceKept, remainingDices, potentialScoreIfContinue)
+            if (newMaxScore is not False):
+                potentialScoreIfContinue = newMaxScore
             verbose("computerPlayer", scoreIfDoNotContinue, potentialScoreIfContinue, self.riskFactor * potentialScoreIfContinue)
             if(self.riskFactor * potentialScoreIfContinue > scoreIfDoNotContinue and self.score + potentialScoreIfContinue < FarkleDiceGame.WIN_SCORE):
                 # continue if potential score by throwing dices again > current score and does not exceed win score
-                self.__checkIfWorthDiscarding(diceKept, remainingDices, potentialScoreIfContinue)
                 verbose("computerPlayer", "AI decides to continue")
                 return (True, diceKept)
+                # TODO: add case of score + scoreIfDoNotContinue > Win score and check if possible to discard to minimize dice score
             else:
+                # decides to stop, reset diceKept to keep all dices and maximize turnScore
+                (diceKept, diceScore) = FarkleDiceGame.evaluateDices(diceRoll)
                 verbose("computerPlayer", "AI decides to stop")
                 return (False, diceKept)
 
@@ -505,7 +516,12 @@ def randomCheck():
 
 def updateConsoleUI(game, event, currentPlayer=0, diceRoll=[], dicesKept=[], nbDicesToThrow=0):
     if(event in ["endTurnBadThrow", "endTurnNoScore"]):
-        msg = "Roll: " + str(diceRoll) + "\n" + game.players[currentPlayer].name + " does not score. Score: " + str(game.players[currentPlayer].score) + " Dices kept:" + str(game.players[currentPlayer].turnDicesKept)
+        msg = "Bad roll: " + str(diceRoll) + "\n" + game.players[currentPlayer].name + " does not score. Score: " + str(game.players[currentPlayer].score) + " Dices kept:" + str(game.players[currentPlayer].turnDicesKept)
+        cprint(msg, 'white', 'on_red')
+    elif(event in ["endTurnNoScore"]):
+        msg = "Bad roll: " + str(diceRoll)
+        print(msg)
+        msg = game.players[currentPlayer].name + " does not score. Score: " + str(game.players[currentPlayer].score) + " Dices kept:" + str(game.players[currentPlayer].turnDicesKept)
         cprint(msg, 'white', 'on_red')
     elif(event in ["endTurnScores"]):
         msg = game.players[currentPlayer].name + " scores " + str(game.players[currentPlayer].turnScore) + " points. Score: " + str(game.players[currentPlayer].score) + " Dices kept:" + str(game.players[currentPlayer].turnDicesKept)
