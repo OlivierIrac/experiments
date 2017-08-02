@@ -11,7 +11,7 @@ from termcolor import cprint
 def verbose(category, *args):
     verboseFilter = [  # "evaluateDices",
                     # "gameStatistics",
-                    "computerPlayer"
+                    # "computerPlayer"
                     ]  # @IgnorePep8
     if(category in verboseFilter):
         print(category, ":", *args)
@@ -161,15 +161,16 @@ class ComputerPlayer(Player):
     def decideNextMove(self, diceRoll):
         (diceKept, diceScore) = FarkleDiceGame.evaluateDices(diceRoll)
         if(not self.hasStarted):
-            # not started, keep playing until reach score required for start
+            # not started
             remainingDices = len(diceRoll) - len(diceKept)
             potentialScoreIfContinue = self.game.gameStats.computePotentialScore(remainingDices, diceScore + self.turnScore)
             self.__checkIfWorthDiscarding(diceKept, remainingDices, potentialScoreIfContinue)
             if(diceScore + self.turnScore < FarkleDiceGame.START_SCORE):
-                # decides to stop, reset diceKept to keep all dices and maximize turnScore
-                (diceKept, diceScore) = FarkleDiceGame.evaluateDices(diceRoll)
+                # keep playing until reach score required for start
                 return (True, diceKept)
             else:
+                # decides to stop, reset diceKept to keep all dices and maximize turnScore
+                (diceKept, diceScore) = FarkleDiceGame.evaluateDices(diceRoll)
                 return (False, diceKept)
         else:
             # started
@@ -207,29 +208,20 @@ class HumanPlayer(Player):
 
     def decideNextMove(self, diceRoll):
         diceKept = []
-        diceAvail = list(diceRoll)  # makes a copy
-        (diceAllowed, _) = FarkleDiceGame.evaluateDices(diceRoll)
         done = False
         keepPlaying = True
+        msg = "Dice roll:" + str(diceRoll)
+        cprint(msg, 'white', 'on_cyan')
+        print("(1-6, empty to end & continue, anykey for end & stop turn)")
         while(not done):
-            # TODO: separate user interaction
-            msg = "Select from:" + str(diceAvail) + "(empty to end & continue, anykey for end & stop turn) :"
-            dice = input(msg)
+            dice = input("?")
             if (dice in ['1', '2', '3', '4', '5', '6']):
-                dice = int(dice)
-                # TODO: separate check of valid user inputs / selections
-                if (dice in diceAvail and dice in diceAllowed):
-                    diceKept.append(dice)
-                    diceAvail.remove(dice)
-                else:
-                    # TODO: separate user interaction
-                    print("Not allowed")
+                diceKept.append(int(dice))
             elif (dice != ''):
                 done = True
                 keepPlaying = False
             else:
                 done = True
-        # FIXME: check that hand is still valid (possible refactor in game class) ex. from 1, 2, 2, 2 currently possible to take 1, 2
         return (keepPlaying, diceKept)
 
 
@@ -280,6 +272,30 @@ class FarkleDiceGame:
             diceRoll.append(random.choice(FarkleDiceGame.dice))
         return diceRoll
 
+    def validPlayerDiceSelection(self, diceRoll, diceSelection, keepPlaying):
+        if(not keepPlaying):
+            # Player decides to stop, dice selection must contain all scoring dices
+            (scoringDices, _) = FarkleDiceGame.evaluateDices(diceRoll)
+            if(sorted(diceSelection) == sorted(scoringDices)):
+                return True
+            else:
+                self.updateUI(self, "mustKeepAllScoringDicesToStop")
+                return False
+        else:
+            # Player want to continue, all dices from selection shall score
+            (_, selectionScore) = FarkleDiceGame.evaluateDices(diceSelection)
+            selectionValid = True
+            for dice in diceSelection:
+                selectionMinusDice = list(diceSelection)
+                selectionMinusDice.remove(dice)
+                (_, selectionMinusDiceScore) = FarkleDiceGame.evaluateDices(selectionMinusDice)
+                if(selectionScore == selectionMinusDiceScore):
+                    # removing dice did not decrease the score : selection is not valid
+                    # TODO: add dice as argument, change updateUI to *args
+                    self.updateUI(self, "invalidDiceSelection")
+                    selectionValid = False
+            return selectionValid
+
     def play(self):
         gameOver = False
         currentPlayer = 0
@@ -308,7 +324,10 @@ class FarkleDiceGame:
                     self.updateUI(self, "endTurnBadThrow", currentPlayer, diceRoll)
                     turnOver = True
                 else:
-                    (keepPlaying, diceKept) = self.players[currentPlayer].decideNextMove(diceRoll)
+                    selectionValid = False
+                    while(not selectionValid):
+                        (keepPlaying, diceKept) = self.players[currentPlayer].decideNextMove(diceRoll)
+                        selectionValid = self.validPlayerDiceSelection(diceRoll, diceKept, keepPlaying)
                     (_, turnScore) = FarkleDiceGame.evaluateDices(diceKept)
                     nbDicesToThrow -= len(diceKept)
                     if(nbDicesToThrow <= 0):
@@ -539,6 +558,10 @@ def updateConsoleUI(game, event, currentPlayer=0, diceRoll=[], dicesKept=[], nbD
         playersByScore = sorted(game.players, key=lambda x: x.score, reverse=True)
         for player in playersByScore:
             print(player.name, player.score)
+    elif(event in ["mustKeepAllScoringDicesToStop"]):
+        cprint("You must keep all scoring dices to end turn.", 'white', 'on_red')
+    elif(event in ["invalidDiceSelection"]):
+        cprint("Invalid dice selection.", 'white', 'on_red')
     else:
         print ("Roll:", diceRoll, "Kept:", dicesKept, "Turn score:", game.players[currentPlayer].turnScore)
 
