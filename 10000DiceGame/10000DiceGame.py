@@ -10,7 +10,7 @@ from termcolor import cprint
 
 def verbose(category, *args):
     verboseFilter = [  # "evaluateDices",
-                    # "gameStatistics",
+                    "gameStatistics",
                     # "computerPlayer"
                     ]  # @IgnorePep8
     if(category in verboseFilter):
@@ -25,6 +25,7 @@ class GameStatistics:
             self.combination = 0
             self.nonZeroCombination = 0
             self.maxScore = 0
+            self.allDicesScoreCombination = 0
 
         def print(self):
             msg = "max score = " + str(self.maxScore) + "\n"
@@ -32,6 +33,7 @@ class GameStatistics:
             msg += "average score per non nul roll = " + repr(self.nonZeroTotalScore / self.nonZeroCombination) + "\n"
             msg += str(self.combination) + " combinations\n"
             msg += str(self.combination - self.nonZeroCombination) + " nul combinations = " + repr(100 * (self.combination - self.nonZeroCombination) / self.combination) + "% \n"
+            msg += "Combination with all dices scoring = " + str(self.allDicesScoreCombination) + "\n"
             return msg
 
     def __init__(self, forceUpdate=False):
@@ -64,7 +66,10 @@ class GameStatistics:
         if(nbDices == 1):
             for dice in FarkleDiceGame.dice:
                 stats.combination += 1
-                (_, score) = FarkleDiceGame.evaluateDices(diceRoll + [dice])
+                (scoringDices, score) = FarkleDiceGame.evaluateDices(diceRoll + [dice])
+                if(len(scoringDices) == len(diceRoll) + 1):
+                    # All dices score
+                    stats.allDicesScoreCombination += 1
                 stats.totalScore += score
                 if (score != 0):
                     stats.nonZeroCombination += 1
