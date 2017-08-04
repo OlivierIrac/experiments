@@ -81,16 +81,18 @@ class GameStatistics:
                 stats = self.__computeStatistics(nbDices - 1, diceRoll + [dice], stats, False)
         return stats
 
+    def avgScoreForNbDices(self, nbDices):
+        return self.gameStats[nbDices - 1].nonZeroTotalScore / self.gameStats[nbDices - 1].nonZeroCombination
+
     def computePotentialScore(self, nbDiceToThrow, currentTurnScore):
         # % chance to get non zero combination  = nonZeroCombination / combination
         chanceToGetNonZeroCombination = self.gameStats[nbDiceToThrow - 1].nonZeroCombination / self.gameStats[nbDiceToThrow - 1].combination
         # average score for non zero combination = nonZeroTotalScore / nonZeroCombination
-        avgScoreForNonZeroCombination = self.gameStats[nbDiceToThrow - 1].nonZeroTotalScore / self.gameStats[nbDiceToThrow - 1].nonZeroCombination
+        avgScoreForNonZeroCombination = self.avgScoreForNbDices(nbDiceToThrow)
         # % chance to get all dices scoring (and rethrow 6 dices) = allDicesScoreCombination / combination
         chanceToGetAllDicesScore = self.gameStats[nbDiceToThrow - 1].allDicesScoreCombination / self.gameStats[nbDiceToThrow - 1].combination
         # average score for 6 dices rethrow
-        avgScoreForNonZero6DicesCombination = self.gameStats[5].nonZeroTotalScore / self.gameStats[5].nonZeroCombination
-        # potential score = % chance to get non zero combination * (currentTurnScore + average score for nbDices)
+        avgScoreForNonZero6DicesCombination = self.avgScoreForNbDices(6)
         return chanceToGetNonZeroCombination * (currentTurnScore + avgScoreForNonZeroCombination) + chanceToGetAllDicesScore * avgScoreForNonZero6DicesCombination
 
 
@@ -148,19 +150,23 @@ class ComputerPlayer(Player):
             return False
         maxPotentialScore = potentialScore
         diceToDiscard = 0
+        # want to be as close as possible to Win Score - avg score for 6 dices
+        targetScore = FarkleDiceGame.WIN_SCORE - self.score - self.game.gameStats.avgScoreForNbDices(6)
         for dice in diceKept:
-            # create new dice kept list removing dice
+            # check what is the best dice to discard
             diceKeptDiscarded = list(diceKept)
             diceKeptDiscarded.remove(dice)
             (_, diceScore) = FarkleDiceGame.evaluateDices(diceKeptDiscarded)
             potentialScoreByDiscarding = self.game.gameStats.computePotentialScore(remainingDices + 1, diceScore + self.turnScore)
-            if(potentialScoreByDiscarding > maxPotentialScore):
+            # check if new score with discard is closer to target score (for end game optimization)
+            if(abs(potentialScoreByDiscarding - targetScore) < abs(maxPotentialScore - targetScore)):
                 maxPotentialScore = potentialScoreByDiscarding
                 diceToDiscard = dice
         if (maxPotentialScore > potentialScore):
             # found one dice maximizing potential score
             diceKept.remove(diceToDiscard)
             verbose("computerPlayer", "AI decides to discard dice", diceToDiscard)
+            # check if worth discarding other dices
             newMaxScore = self.__checkIfWorthDiscarding(diceKept, remainingDices + 1, maxPotentialScore)
             if (newMaxScore is not False):
                 maxPotentialScore = newMaxScore
@@ -196,7 +202,6 @@ class ComputerPlayer(Player):
                 # continue if potential score by throwing dices again > current score and does not exceed win score
                 verbose("computerPlayer", "AI decides to continue")
                 return (True, diceKept)
-                # TODO: add case of score + scoreIfDoNotContinue > Win score and check if possible to discard to minimize dice score
             else:
                 # decides to stop, reset diceKept to keep all dices and maximize turnScore
                 (diceKept, diceScore) = FarkleDiceGame.evaluateDices(diceRoll)
@@ -301,14 +306,13 @@ class FarkleDiceGame:
                 (_, selectionMinusDiceScore) = FarkleDiceGame.evaluateDices(selectionMinusDice)
                 if(selectionScore == selectionMinusDiceScore):
                     # removing dice did not decrease the score : selection is not valid
-                    # TODO: add dice as argument, change updateUI to *args
-                    self.updateUI(self, "invalidDiceSelection")
+                    self.updateUI(self, "invalidDiceSelection", self.currentPlayer, [dice])
                     selectionValid = False
             return selectionValid
 
     def play(self):
         gameOver = False
-        currentPlayer = 0
+        self.currentPlayer = 0
         scoreForPossibleFollowUp = 0
         nbDicesToThrow = 6
         print(len(self.players), "players:")
@@ -316,53 +320,53 @@ class FarkleDiceGame:
             print (player.name)
         self.turn = 1
         while(not gameOver):
-            self.updateUI(self, "startTurn", currentPlayer)
+            self.updateUI(self, "startTurn", self.currentPlayer)
             turnOver = False
-            if(scoreForPossibleFollowUp != 0 and self.players[currentPlayer].hasStarted and self.players[currentPlayer].wantToFollowUp(scoreForPossibleFollowUp, nbDicesToThrow)):
+            if(scoreForPossibleFollowUp != 0 and self.players[self.currentPlayer].hasStarted and self.players[self.currentPlayer].wantToFollowUp(scoreForPossibleFollowUp, nbDicesToThrow)):
                 # check if user want to restart from last player turn score & remaining dices
-                self.players[currentPlayer].startTurn(scoreForPossibleFollowUp)
-                self.updateUI(self, "turnFollowUp", currentPlayer, [], [], nbDicesToThrow)
+                self.players[self.currentPlayer].startTurn(scoreForPossibleFollowUp)
+                self.updateUI(self, "turnFollowUp", self.currentPlayer, [], [], nbDicesToThrow)
             else:
                 nbDicesToThrow = 6
-                self.players[currentPlayer].startTurn(0)
+                self.players[self.currentPlayer].startTurn(0)
             while (not turnOver):
                 diceRoll = self.rollDices(nbDicesToThrow)
                 (_, maxScore) = FarkleDiceGame.evaluateDices(diceRoll)
                 if(maxScore == 0):
                     scoreForPossibleFollowUp = 0  # No turn follow-up
-                    self.players[currentPlayer].endTurn(False, diceRoll)
-                    self.updateUI(self, "endTurnBadThrow", currentPlayer, diceRoll)
+                    self.players[self.currentPlayer].endTurn(False, diceRoll)
+                    self.updateUI(self, "endTurnBadThrow", self.currentPlayer, diceRoll)
                     turnOver = True
                 else:
                     selectionValid = False
                     while(not selectionValid):
-                        (keepPlaying, diceKept) = self.players[currentPlayer].decideNextMove(diceRoll)
+                        (keepPlaying, diceKept) = self.players[self.currentPlayer].decideNextMove(diceRoll)
                         selectionValid = self.validPlayerDiceSelection(diceRoll, diceKept, keepPlaying)
                     (_, turnScore) = FarkleDiceGame.evaluateDices(diceKept)
                     nbDicesToThrow -= len(diceKept)
                     if(nbDicesToThrow <= 0):
                         keepPlaying = True  # must continue if no more dice
                         nbDicesToThrow = 6
-                    self.players[currentPlayer].addTurnScore(turnScore, diceKept)
-                    self.updateUI(self, "UserSelectedDices", currentPlayer, diceRoll, diceKept)
-                    if(turnScore == 0 or self.players[currentPlayer].score + self.players[currentPlayer].turnScore > FarkleDiceGame.WIN_SCORE):
+                    self.players[self.currentPlayer].addTurnScore(turnScore, diceKept)
+                    self.updateUI(self, "UserSelectedDices", self.currentPlayer, diceRoll, diceKept)
+                    if(turnScore == 0 or self.players[self.currentPlayer].score + self.players[self.currentPlayer].turnScore > FarkleDiceGame.WIN_SCORE):
                         scoreForPossibleFollowUp = 0  # No turn follow-up
-                        self.players[currentPlayer].endTurn(False, diceRoll)
-                        self.updateUI(self, "endTurnNoScore", currentPlayer, diceRoll, diceKept)
+                        self.players[self.currentPlayer].endTurn(False, diceRoll)
+                        self.updateUI(self, "endTurnNoScore", self.currentPlayer, diceRoll, diceKept)
                         turnOver = True
                     elif (not keepPlaying):
-                        scoreForPossibleFollowUp = self.players[currentPlayer].turnScore
-                        self.players[currentPlayer].endTurn(True, diceRoll)
-                        self.updateUI(self, "endTurnScores", currentPlayer, diceRoll, diceKept)
+                        scoreForPossibleFollowUp = self.players[self.currentPlayer].turnScore
+                        self.players[self.currentPlayer].endTurn(True, diceRoll)
+                        self.updateUI(self, "endTurnScores", self.currentPlayer, diceRoll, diceKept)
                         turnOver = True
-            if (self.players[currentPlayer].score == FarkleDiceGame.WIN_SCORE):
-                self.updateUI(self, "gameOver", currentPlayer)
+            if (self.players[self.currentPlayer].score == FarkleDiceGame.WIN_SCORE):
+                self.updateUI(self, "gameOver", self.currentPlayer)
                 gameOver = True
-            currentPlayer += 1
-            if (currentPlayer == len(self.players)):
-                currentPlayer = 0
+            self.currentPlayer += 1
+            if (self.currentPlayer == len(self.players)):
+                self.currentPlayer = 0
                 self.turn += 1
-        return currentPlayer
+        return self.currentPlayer
 
     @staticmethod
     def evaluateDices(diceRoll):
@@ -571,7 +575,8 @@ def updateConsoleUI(game, event, currentPlayer=0, diceRoll=[], dicesKept=[], nbD
     elif(event in ["mustKeepAllScoringDicesToStop"]):
         cprint("You must keep all scoring dices to end turn.", 'white', 'on_red')
     elif(event in ["invalidDiceSelection"]):
-        cprint("Invalid dice selection.", 'white', 'on_red')
+        msg = "Invalid dice selection: " + str(diceRoll)
+        cprint(msg, 'white', 'on_red')
     else:
         print ("Roll:", diceRoll, "Kept:", dicesKept, "Turn score:", game.players[currentPlayer].turnScore)
 
