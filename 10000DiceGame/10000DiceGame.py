@@ -83,10 +83,15 @@ class GameStatistics:
 
     def computePotentialScore(self, nbDiceToThrow, currentTurnScore):
         # % chance to get non zero combination  = nonZeroCombination / combination
-        # average score for nbDices = nonZeroTotalScore / nonZeroCombination
+        chanceToGetNonZeroCombination = self.gameStats[nbDiceToThrow - 1].nonZeroCombination / self.gameStats[nbDiceToThrow - 1].combination
+        # average score for non zero combination = nonZeroTotalScore / nonZeroCombination
+        avgScoreForNonZeroCombination = self.gameStats[nbDiceToThrow - 1].nonZeroTotalScore / self.gameStats[nbDiceToThrow - 1].nonZeroCombination
+        # % chance to get all dices scoring (and rethrow 6 dices) = allDicesScoreCombination / combination
+        chanceToGetAllDicesScore = self.gameStats[nbDiceToThrow - 1].allDicesScoreCombination / self.gameStats[nbDiceToThrow - 1].combination
+        # average score for 6 dices rethrow
+        avgScoreForNonZero6DicesCombination = self.gameStats[5].nonZeroTotalScore / self.gameStats[5].nonZeroCombination
         # potential score = % chance to get non zero combination * (currentTurnScore + average score for nbDices)
-        # FIXME: take into account probability that all dices can score and result in 6 more dices
-        return self.gameStats[nbDiceToThrow - 1].nonZeroCombination / self.gameStats[nbDiceToThrow - 1].combination * (currentTurnScore + self.gameStats[nbDiceToThrow - 1].nonZeroTotalScore / self.gameStats[nbDiceToThrow - 1].nonZeroCombination)
+        return chanceToGetNonZeroCombination * (currentTurnScore + avgScoreForNonZeroCombination) + chanceToGetAllDicesScore * avgScoreForNonZero6DicesCombination
 
 
 class Player:
