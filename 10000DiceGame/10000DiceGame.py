@@ -144,7 +144,7 @@ class ComputerPlayer(Player):
             verbose("computerPlayer", "AI decides to start over")
             return False
 
-    def __checkIfWorthDiscarding(self, diceKept, remainingDices, potentialScore):
+    def __checkIfWorthDiscarding(self, diceRoll, diceKept, remainingDices, potentialScore):
         if(len(diceKept) == 1):
             # cannot discard anything
             return False
@@ -167,10 +167,15 @@ class ComputerPlayer(Player):
             diceKept.remove(diceToDiscard)
             verbose("computerPlayer", "AI decides to discard dice", diceToDiscard)
             # check if worth discarding other dices
-            newMaxScore = self.__checkIfWorthDiscarding(diceKept, remainingDices + 1, maxPotentialScore)
+            newMaxScore = self.__checkIfWorthDiscarding(diceRoll, diceKept, remainingDices + 1, maxPotentialScore)
             if (newMaxScore is not False):
                 maxPotentialScore = newMaxScore
-            return maxPotentialScore
+            # check if selection still valid
+            if(self.game.validPlayerDiceSelection(diceRoll, diceKeptDiscarded, True)):
+                # FIXME: can return invalid dice selection ex. [2]
+                return maxPotentialScore
+            else:
+                return False
         else:
             return False
 
@@ -180,12 +185,12 @@ class ComputerPlayer(Player):
             # not started
             remainingDices = len(diceRoll) - len(diceKept)
             potentialScoreIfContinue = self.game.gameStats.computePotentialScore(remainingDices, diceScore + self.turnScore)
-            self.__checkIfWorthDiscarding(diceKept, remainingDices, potentialScoreIfContinue)
+            self.__checkIfWorthDiscarding(diceRoll, diceKept, remainingDices, potentialScoreIfContinue)
             if(diceScore + self.turnScore < FarkleDiceGame.START_SCORE):
                 # keep playing until reach score required for start
                 return (True, diceKept)
             else:
-                # decides to stop, reset diceKept to keep all dices and maximize turnScore
+                # decides to stop, reset diceKept to keep all dices
                 (diceKept, diceScore) = FarkleDiceGame.evaluateDices(diceRoll)
                 return (False, diceKept)
         else:
@@ -194,7 +199,7 @@ class ComputerPlayer(Player):
             scoreIfDoNotContinue = diceScore + self.turnScore
             remainingDices = len(diceRoll) - len(diceKept)
             potentialScoreIfContinue = self.game.gameStats.computePotentialScore(remainingDices, diceScore + self.turnScore)
-            newMaxScore = self.__checkIfWorthDiscarding(diceKept, remainingDices, potentialScoreIfContinue)
+            newMaxScore = self.__checkIfWorthDiscarding(diceRoll, diceKept, remainingDices, potentialScoreIfContinue)
             if (newMaxScore is not False):
                 potentialScoreIfContinue = newMaxScore
             verbose("computerPlayer", scoreIfDoNotContinue, potentialScoreIfContinue, self.riskFactor * potentialScoreIfContinue)
@@ -203,7 +208,7 @@ class ComputerPlayer(Player):
                 verbose("computerPlayer", "AI decides to continue")
                 return (True, diceKept)
             else:
-                # decides to stop, reset diceKept to keep all dices and maximize turnScore
+                # decides to stop, reset diceKept to keep all dices
                 (diceKept, diceScore) = FarkleDiceGame.evaluateDices(diceRoll)
                 verbose("computerPlayer", "AI decides to stop")
                 return (False, diceKept)
@@ -294,8 +299,7 @@ class FarkleDiceGame:
             if(sorted(diceSelection) == sorted(scoringDices)):
                 return True
             else:
-                self.updateUI(self, "mustKeepAllScoringDicesToStop")
-                return False
+                return "mustKeepAllScoringDicesToStop"
         else:
             # Player want to continue, all dices from selection shall score
             (_, selectionScore) = FarkleDiceGame.evaluateDices(diceSelection)
@@ -306,8 +310,7 @@ class FarkleDiceGame:
                 (_, selectionMinusDiceScore) = FarkleDiceGame.evaluateDices(selectionMinusDice)
                 if(selectionScore == selectionMinusDiceScore):
                     # removing dice did not decrease the score : selection is not valid
-                    self.updateUI(self, "invalidDiceSelection", self.currentPlayer, [dice])
-                    selectionValid = False
+                    selectionValid = "invalidDiceSelection"
             return selectionValid
 
     def play(self):
@@ -339,9 +342,11 @@ class FarkleDiceGame:
                     turnOver = True
                 else:
                     selectionValid = False
-                    while(not selectionValid):
+                    while(selectionValid is not True):
                         (keepPlaying, diceKept) = self.players[self.currentPlayer].decideNextMove(diceRoll)
                         selectionValid = self.validPlayerDiceSelection(diceRoll, diceKept, keepPlaying)
+                        if (selectionValid is not True):
+                            self.updateUI(self, selectionValid)
                     (_, turnScore) = FarkleDiceGame.evaluateDices(diceKept)
                     nbDicesToThrow -= len(diceKept)
                     if(nbDicesToThrow <= 0):
@@ -575,8 +580,9 @@ def updateConsoleUI(game, event, currentPlayer=0, diceRoll=[], dicesKept=[], nbD
     elif(event in ["mustKeepAllScoringDicesToStop"]):
         cprint("You must keep all scoring dices to end turn.", 'white', 'on_red')
     elif(event in ["invalidDiceSelection"]):
-        msg = "Invalid dice selection: " + str(diceRoll)
-        cprint(msg, 'white', 'on_red')
+        msg = "Invalid dice selection"
+        # cprint(msg, 'white', 'on_red')
+        print(msg)
     else:
         print ("Roll:", diceRoll, "Kept:", dicesKept, "Turn score:", game.players[currentPlayer].turnScore)
 
@@ -606,8 +612,8 @@ def playHumanVsComputerGame():
 def main():
     # testCases()
     # randomCheck()
-    playHumanVsComputerGame()
-    # playComputersGame()
+    # playHumanVsComputerGame()
+    playComputersGame()
 
 
 main()
