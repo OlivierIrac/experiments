@@ -562,26 +562,28 @@ def randomCheck():
 
 
 def updateConsoleUI(game, event, currentPlayer=0, diceRoll=[], dicesKept=[], nbDicesToThrow=0):
-    if(event in ["endTurnBadThrow", "endTurnNoScore"]):
-        msg = "Bad roll: " + str(diceRoll) + "\n" + game.players[currentPlayer].name + " does not score. Score: " + str(game.players[currentPlayer].score) + " Dices kept:" + str(game.players[currentPlayer].turnDicesKept)
-        cprint(msg, 'white', 'on_red')
-    elif(event in ["endTurnNoScore"]):
+    if(event in ["endTurnBadThrow"]):
         msg = "Bad roll: " + str(diceRoll)
-        print(msg)
-        msg = game.players[currentPlayer].name + " does not score. Score: " + str(game.players[currentPlayer].score) + " Dices kept:" + str(game.players[currentPlayer].turnDicesKept)
         cprint(msg, 'white', 'on_red')
+        msg = game.players[currentPlayer].name + " end turn. Score: " + str(game.players[currentPlayer].score)
+        cprint(msg, 'white', 'on_blue')
+    elif(event in ["endTurnNoScore"]):
+        msg = "No score"
+        cprint(msg, 'white', 'on_red')
+        msg = game.players[currentPlayer].name + " end turn. Score: " + str(game.players[currentPlayer].score)
+        cprint(msg, 'white', 'on_blue')
     elif(event in ["endTurnScores"]):
-        msg = game.players[currentPlayer].name + " scores " + str(game.players[currentPlayer].turnScore) + " points. Score: " + str(game.players[currentPlayer].score) + " Dices kept:" + str(game.players[currentPlayer].turnDicesKept)
-        cprint(msg, 'white', 'on_green')
+        msg = game.players[currentPlayer].name + " end turn. Score: " + str(game.players[currentPlayer].score)
+        cprint(msg, 'white', 'on_blue')
     elif(event in ["startTurn"]):
-        msg = game.players[currentPlayer].name + " turn. Score: " + str(game.players[currentPlayer].score)
+        msg = "\n" + game.players[currentPlayer].name + " turn. Score: " + str(game.players[currentPlayer].score)
         cprint(msg, 'white', 'on_blue')
     elif(event in ["turnFollowUp"]):
         msg = game.players[currentPlayer].name + " decides to follow-up with " + str(game.players[currentPlayer].turnScore) + " points and " + str(nbDicesToThrow) + " dices"
-        cprint(msg, 'white', 'on_blue')
+        print(msg)
     elif(event in ["gameOver"]):
         msg = game.players[currentPlayer].name + " wins !"
-        cprint(msg, 'white', 'on_cyan', attrs=['blink'])
+        cprint(msg, 'white', 'on_green')
         print(game.turn, "turns")
         playersByScore = sorted(game.players, key=lambda x: x.score, reverse=True)
         for player in playersByScore:
@@ -590,9 +592,7 @@ def updateConsoleUI(game, event, currentPlayer=0, diceRoll=[], dicesKept=[], nbD
         cprint("You must keep all scoring dices to end turn.", 'white', 'on_red')
     elif(event in ["invalidDiceSelection"]):
         msg = "Invalid dice selection"
-        # cprint(msg, 'white', 'on_red')
-        print(msg)
-        print("got it")
+        cprint(msg, 'white', 'on_red')
     else:
         print ("Roll:", diceRoll, "Kept:", dicesKept, "Turn score:", game.players[currentPlayer].turnScore)
 
