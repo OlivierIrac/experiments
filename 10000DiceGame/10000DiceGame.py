@@ -11,7 +11,7 @@ from termcolor import cprint
 def verbose(category, *args):
     verboseFilter = [  # "evaluateDices",
                     # "gameStatistics",
-                    # "computerPlayer"
+                    "AI"
                     ]  # @IgnorePep8
     if(category in verboseFilter):
         print(category, ":", *args)
@@ -133,26 +133,29 @@ class ComputerPlayer(Player):
 
     def wantToFollowUp(self, score, nbDices):
         if(self.score + score > FarkleDiceGame.WIN_SCORE - self.bufferUnderWinScore):
-            verbose("computerPlayer", "AI cannot follow up as score would exceed win score - buffer")
+            verbose("AI", "AI cannot follow up as score would exceed win score - buffer")
             return False
         potentialScoreIfFollowUp = self.game.gameStats.computePotentialScore(nbDices, score)
         potentialScoreIfStartOver = self.game.gameStats.computePotentialScore(6, 0)
-        verbose("computerPlayer", "follow-up vs. start over:", potentialScoreIfFollowUp, potentialScoreIfStartOver)
+        verbose("AI", "follow-up vs. start over:", potentialScoreIfFollowUp, potentialScoreIfStartOver)
         if(potentialScoreIfFollowUp > potentialScoreIfStartOver):
-            verbose("computerPlayer", "AI decides to follow-up with", score, "points and", nbDices, "dices")
+            verbose("AI", "AI decides to follow-up with", score, "points and", nbDices, "dices")
             return True
         else:
-            verbose("computerPlayer", "AI decides to start over")
+            verbose("AI", "AI decides to start over")
             return False
 
     def __checkIfWorthDiscarding(self, diceRoll, diceKept, remainingDices, potentialScore):
+        # TODO: implement another algorithm : list all valid dices combinations and associated potential score, select best combination according to situation (main game, end game)
         if(len(diceKept) == 1):
             # cannot discard anything
             return False
         maxPotentialScore = potentialScore
         diceToDiscard = 0
-        # want to be as close as possible to Win Score - avg score for 6 dices
-        targetScore = FarkleDiceGame.WIN_SCORE - self.score - self.game.gameStats.avgScoreForNbDices(6)
+        # option 1: want to be as close as possible to Win Score - avg score for 6 dices
+        # targetScore = FarkleDiceGame.WIN_SCORE - self.score - self.game.gameStats.avgScoreForNbDices(6)
+        # option 2: want to be as close as possible to Win Score - buffer
+        targetScore = FarkleDiceGame.WIN_SCORE - self.score - self.bufferUnderWinScore
         for dice in diceKept:
             # check what is the best dice to discard and store it in diceToDiscard
             diceKeptDiscarded = list(diceKept)
@@ -160,7 +163,10 @@ class ComputerPlayer(Player):
             (_, diceScore) = FarkleDiceGame.evaluateDices(diceKeptDiscarded)
             potentialScoreByDiscarding = self.game.gameStats.computePotentialScore(remainingDices + 1, diceScore + self.turnScore)
             # check if new score with discard is closer to target score (for end game optimization)
-            if(abs(potentialScoreByDiscarding - targetScore) < abs(maxPotentialScore - targetScore)):
+            # option 1 : min distance to target score (can be above target score)
+            # if(abs(potentialScoreByDiscarding - targetScore) <= abs(maxPotentialScore - targetScore)):
+            # option 2 : closest to target score but under
+            if(maxPotentialScore <= potentialScoreByDiscarding <= targetScore):
                 maxPotentialScore = potentialScoreByDiscarding
                 diceToDiscard = dice
         if (maxPotentialScore > potentialScore):
@@ -173,7 +179,7 @@ class ComputerPlayer(Player):
             else:
                 # proceed with removing dice and recurse to find if more dices are worth discarding
                 diceKept.remove(diceToDiscard)
-                verbose("computerPlayer", "AI decides to discard dice", diceToDiscard)
+                verbose("AI", "AI decides to discard dice", diceToDiscard)
                 newMaxScore = self.__checkIfWorthDiscarding(diceRoll, diceKept, remainingDices + 1, maxPotentialScore)
                 if (newMaxScore is not False):
                     maxPotentialScore = newMaxScore
@@ -197,8 +203,9 @@ class ComputerPlayer(Player):
                 return (False, diceKept)
         else:
             # started
-            if(diceScore + self.turnScore == FarkleDiceGame.WIN_SCORE):
+            if(self.score + self.turnScore + diceScore == FarkleDiceGame.WIN_SCORE):
                 # Win : keep all dices & stop
+                verbose("AI", "AI scores to win")
                 return (False, diceKept)
             # Else: evaluate benefit of continuing
             scoreIfDoNotContinue = diceScore + self.turnScore
@@ -207,19 +214,21 @@ class ComputerPlayer(Player):
             newMaxScore = self.__checkIfWorthDiscarding(diceRoll, diceKept, remainingDices, potentialScoreIfContinue)
             if (newMaxScore is not False):
                 potentialScoreIfContinue = newMaxScore
-            verbose("computerPlayer", scoreIfDoNotContinue, potentialScoreIfContinue, self.riskFactor * potentialScoreIfContinue)
+            verbose("AI", scoreIfDoNotContinue, potentialScoreIfContinue, self.riskFactor * potentialScoreIfContinue)
             if(self.riskFactor * potentialScoreIfContinue > scoreIfDoNotContinue and self.score + potentialScoreIfContinue < FarkleDiceGame.WIN_SCORE - self.game.gameStats.avgScoreForNbDices(6)):
                 # continue if potential score by throwing dices again > current score and does not exceed win score
-                verbose("computerPlayer", "AI decides to continue")
+                verbose("AI", "AI decides to continue")
                 return (True, diceKept)
             else:
-                if(diceScore + self.turnScore >= FarkleDiceGame.WIN_SCORE - self.bufferUnderWinScore):
+                if(self.score + self.turnScore + diceScore > FarkleDiceGame.WIN_SCORE - self.bufferUnderWinScore):
+                    # optimize end game
+                    # TODO: check if diceKept include a 1 or a 5 and keep only 1 dice
+                    verbose("AI", "AI decides to abort turn to keep win buffer")
                     # stop by selecting [] if score is above Win score - buffer
-                    # TODO: check if removing dices can minimize score
                     return (True, [])
                 # decides to stop, reset diceKept to keep all dices
                 (diceKept, diceScore) = FarkleDiceGame.evaluateDices(diceRoll)
-                verbose("computerPlayer", "AI decides to stop")
+                verbose("AI", "AI decides to score turn")
                 return (False, diceKept)
 
 
@@ -240,7 +249,7 @@ class HumanPlayer(Player):
         done = False
         keepPlaying = True
         msg = "Dice roll:" + str(diceRoll)
-        cprint(msg, 'white', 'on_cyan')
+        cprint(msg, 'white', 'on_green')
         print("(1-6, empty to end & continue, anykey for end & stop turn)")
         while(not done):
             dice = input("?")
@@ -613,11 +622,11 @@ def playComputersGame():
 
 def playHumanVsComputerGame():
     game = FarkleDiceGame(updateConsoleUI)
-#    game.addPlayer("Louis", "human")
-    game.addPlayer("Margot", "human")
-    game.addPlayer("Louis", "human")
+    # game.addPlayer("Margot", "human")
+    # game.addPlayer("Louis", "human")
     game.addPlayer("Olivier", "human")
     game.addPlayer("Ordi 1.0")
+    game.addPlayer("Ordi 0.9", "computer", 0.9)
     game.play()
 
 
