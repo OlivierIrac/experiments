@@ -221,11 +221,19 @@ class ComputerPlayer(Player):
                 return (True, diceKept)
             else:
                 if(self.score + self.turnScore + diceScore > FarkleDiceGame.WIN_SCORE - self.bufferUnderWinScore):
-                    # optimize end game
-                    # TODO: check if diceKept include a 1 or a 5 and keep only 1 dice
-                    verbose("AI", "AI decides to abort turn to keep win buffer")
-                    # stop by selecting [] if score is above Win score - buffer
-                    return (True, [])
+                    # if score is above Win score - buffer, optimize end game
+                    # keep only one 5 or one 1 if possible
+                    if(diceKept.count(5) >= 1):
+                        verbose("AI", "AI optimizing end game: decides to keep only one 5")
+                        diceKept = [5]
+                    elif(diceKept.count(1) >= 1):
+                        verbose("AI", "AI optimizing end game: decides to keep only one 1")
+                        diceKept = [1]
+                    else:
+                        # abort turn by selecting []
+                        verbose("AI", "AI optimizing end game: decides to abort turn to keep win buffer")
+                        diceKept = []
+                    return (True, diceKept)
                 # decides to stop, reset diceKept to keep all dices
                 (diceKept, diceScore) = FarkleDiceGame.evaluateDices(diceRoll)
                 verbose("AI", "AI decides to score turn")
