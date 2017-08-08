@@ -8,11 +8,13 @@ import os
 import pickle
 from termcolor import cprint
 
+
 def verbose(category, *args):
-    verboseFilter = [  # "evaluateDices",
-                    # "gameStatistics",
-                    "AI"
-                    ]  # @IgnorePep8
+    verboseFilter = [
+        # "evaluateDices",
+        # "gameStatistics",
+        "AI"
+    ]
     if(category in verboseFilter):
         print(category, ":", *args)
 
@@ -30,10 +32,13 @@ class GameStatistics:
         def print(self):
             msg = "max score = " + str(self.maxScore) + "\n"
             msg += "average score per roll = " + str(self.totalScore / self.combination) + "\n"
-            msg += "average score per non nul roll = " + repr(self.nonZeroTotalScore / self.nonZeroCombination) + "\n"
+            msg += "average score per non nul roll = " + \
+                repr(self.nonZeroTotalScore / self.nonZeroCombination) + "\n"
             msg += str(self.combination) + " combinations\n"
-            msg += str(self.combination - self.nonZeroCombination) + " nul combinations = " + repr(100 * (self.combination - self.nonZeroCombination) / self.combination) + "% \n"
-            msg += "Combination with all dices scoring = " + str(self.allDicesScoreCombination) + "\n"
+            msg += str(self.combination - self.nonZeroCombination) + " nul combinations = " + \
+                repr(100 * (self.combination - self.nonZeroCombination) / self.combination) + "% \n"
+            msg += "Combination with all dices scoring = " + \
+                str(self.allDicesScoreCombination) + "\n"
             return msg
 
     def __init__(self, forceUpdate=False):
@@ -86,11 +91,13 @@ class GameStatistics:
 
     def computePotentialScore(self, nbDiceToThrow, currentTurnScore):
         # % chance to get non zero combination  = nonZeroCombination / combination
-        chanceToGetNonZeroCombination = self.gameStats[nbDiceToThrow - 1].nonZeroCombination / self.gameStats[nbDiceToThrow - 1].combination
+        chanceToGetNonZeroCombination = self.gameStats[nbDiceToThrow -
+                                                       1].nonZeroCombination / self.gameStats[nbDiceToThrow - 1].combination
         # average score for non zero combination = nonZeroTotalScore / nonZeroCombination
         avgScoreForNonZeroCombination = self.avgScoreForNbDices(nbDiceToThrow)
         # % chance to get all dices scoring (and rethrow 6 dices) = allDicesScoreCombination / combination
-        chanceToGetAllDicesScore = self.gameStats[nbDiceToThrow - 1].allDicesScoreCombination / self.gameStats[nbDiceToThrow - 1].combination
+        chanceToGetAllDicesScore = self.gameStats[nbDiceToThrow -
+                                                  1].allDicesScoreCombination / self.gameStats[nbDiceToThrow - 1].combination
         # average score for 6 dices rethrow
         avgScoreForNonZero6DicesCombination = self.avgScoreForNbDices(6)
         return chanceToGetNonZeroCombination * (currentTurnScore + avgScoreForNonZeroCombination) + chanceToGetAllDicesScore * avgScoreForNonZero6DicesCombination
@@ -137,7 +144,8 @@ class ComputerPlayer(Player):
             return False
         potentialScoreIfFollowUp = self.game.gameStats.computePotentialScore(nbDices, score)
         potentialScoreIfStartOver = self.game.gameStats.computePotentialScore(6, 0)
-        verbose("AI", "follow-up vs. start over:", potentialScoreIfFollowUp, potentialScoreIfStartOver)
+        verbose("AI", "follow-up vs. start over:",
+                potentialScoreIfFollowUp, potentialScoreIfStartOver)
         if(potentialScoreIfFollowUp > potentialScoreIfStartOver):
             verbose("AI", "AI decides to follow-up with", score, "points and", nbDices, "dices")
             return True
@@ -146,7 +154,9 @@ class ComputerPlayer(Player):
             return False
 
     def __checkIfWorthDiscarding(self, diceRoll, diceKept, remainingDices, potentialScore):
-        # TODO: implement another algorithm : list all valid dices combinations and associated potential score, select best combination according to situation (main game, end game)
+        # TODO: implement another algorithm : list all valid dices combinations
+        # and associated potential score, select best combination according to
+        # situation (main game, end game)
         if(len(diceKept) == 1):
             # cannot discard anything
             return False
@@ -161,7 +171,8 @@ class ComputerPlayer(Player):
             diceKeptDiscarded = list(diceKept)
             diceKeptDiscarded.remove(dice)
             (_, diceScore) = FarkleDiceGame.evaluateDices(diceKeptDiscarded)
-            potentialScoreByDiscarding = self.game.gameStats.computePotentialScore(remainingDices + 1, diceScore + self.turnScore)
+            potentialScoreByDiscarding = self.game.gameStats.computePotentialScore(
+                remainingDices + 1, diceScore + self.turnScore)
             # check if new score with discard is closer to target score (for end game optimization)
             # option 1 : min distance to target score (can be above target score)
             # if(abs(potentialScoreByDiscarding - targetScore) <= abs(maxPotentialScore - targetScore)):
@@ -179,8 +190,9 @@ class ComputerPlayer(Player):
             else:
                 # proceed with removing dice and recurse to find if more dices are worth discarding
                 diceKept.remove(diceToDiscard)
-                verbose("AI", "AI decides to discard dice", diceToDiscard)
-                newMaxScore = self.__checkIfWorthDiscarding(diceRoll, diceKept, remainingDices + 1, maxPotentialScore)
+                verbose("AI", "AI checks if worth discarding dice", diceToDiscard)
+                newMaxScore = self.__checkIfWorthDiscarding(
+                    diceRoll, diceKept, remainingDices + 1, maxPotentialScore)
                 if (newMaxScore is not False):
                     maxPotentialScore = newMaxScore
                 return maxPotentialScore
@@ -192,8 +204,10 @@ class ComputerPlayer(Player):
         if(not self.hasStarted):
             # not started
             remainingDices = len(diceRoll) - len(diceKept)
-            potentialScoreIfContinue = self.game.gameStats.computePotentialScore(remainingDices, diceScore + self.turnScore)
-            self.__checkIfWorthDiscarding(diceRoll, diceKept, remainingDices, potentialScoreIfContinue)
+            potentialScoreIfContinue = self.game.gameStats.computePotentialScore(
+                remainingDices, diceScore + self.turnScore)
+            self.__checkIfWorthDiscarding(
+                diceRoll, diceKept, remainingDices, potentialScoreIfContinue)
             if(diceScore + self.turnScore < FarkleDiceGame.START_SCORE):
                 # keep playing until reach score required for start
                 return (True, diceKept)
@@ -210,25 +224,30 @@ class ComputerPlayer(Player):
             # Else: evaluate benefit of continuing
             scoreIfDoNotContinue = diceScore + self.turnScore
             remainingDices = len(diceRoll) - len(diceKept)
-            potentialScoreIfContinue = self.game.gameStats.computePotentialScore(remainingDices, diceScore + self.turnScore)
-            newMaxScore = self.__checkIfWorthDiscarding(diceRoll, diceKept, remainingDices, potentialScoreIfContinue)
+            potentialScoreIfContinue = self.game.gameStats.computePotentialScore(
+                remainingDices, diceScore + self.turnScore)
+            newMaxScore = self.__checkIfWorthDiscarding(
+                diceRoll, diceKept, remainingDices, potentialScoreIfContinue)
             if (newMaxScore is not False):
                 potentialScoreIfContinue = newMaxScore
-            verbose("AI", scoreIfDoNotContinue, potentialScoreIfContinue, self.riskFactor * potentialScoreIfContinue)
+            verbose("AI", scoreIfDoNotContinue, potentialScoreIfContinue,
+                    self.riskFactor * potentialScoreIfContinue)
             if(self.riskFactor * potentialScoreIfContinue > scoreIfDoNotContinue and self.score + potentialScoreIfContinue < FarkleDiceGame.WIN_SCORE - self.game.gameStats.avgScoreForNbDices(6)):
-                # continue if potential score by throwing dices again > current score and does not exceed win score
+                # continue if potential score by throwing dices again > current score and
+                # does not exceed win score
                 verbose("AI", "AI decides to continue")
                 return (True, diceKept)
             else:
                 if(self.score + self.turnScore + diceScore > FarkleDiceGame.WIN_SCORE - self.bufferUnderWinScore):
                     # if score is above Win score - buffer, optimize end game
                     # keep only one 5 or one 1 if possible
-                    if(diceKept.count(5) >= 1):
-                        verbose("AI", "AI optimizing end game: decides to keep only one 5")
-                        diceKept = [5]
-                    elif(diceKept.count(1) >= 1):
-                        verbose("AI", "AI optimizing end game: decides to keep only one 1")
+                    if(diceKept.count(1) >= 1 and self.score + self.turnScore + FarkleDiceGame.ONE_SCORE <= FarkleDiceGame.WIN_SCORE - self.bufferUnderWinScore):
+                        # keep only one 1 if does not exceed win score - buffer
+                        verbose("AI", "AI optimizing end game: decides to keep only [1]")
                         diceKept = [1]
+                    elif(diceKept.count(5) >= 1):
+                        verbose("AI", "AI optimizing end game: decides to keep only [5]")
+                        diceKept = [5]
                     else:
                         # abort turn by selecting []
                         verbose("AI", "AI optimizing end game: decides to abort turn to keep win buffer")
@@ -245,7 +264,8 @@ class HumanPlayer(Player):
         super().__init__(game, name)
 
     def wantToFollowUp(self, score, nbDices):
-        msg = "Do you want to follow-up on " + str(score) + " points with " + str(nbDices) + " dices? (y/n)"
+        msg = "Do you want to follow-up on " + \
+            str(score) + " points with " + str(nbDices) + " dices? (y/n)"
         key = input(msg)
         if(key == "y"):
             return True
@@ -346,7 +366,7 @@ class FarkleDiceGame:
         nbDicesToThrow = 6
         print(len(self.players), "players:")
         for player in self.players:
-            print (player.name)
+            print(player.name)
         self.turn = 1
         while(not gameOver):
             self.updateUI(self, "startTurn", self.currentPlayer)
@@ -369,8 +389,10 @@ class FarkleDiceGame:
                 else:
                     selectionValid = False
                     while(selectionValid is not True):
-                        (keepPlaying, diceKept) = self.players[self.currentPlayer].decideNextMove(diceRoll)
-                        selectionValid = self.validPlayerDiceSelection(diceRoll, diceKept, keepPlaying)
+                        (keepPlaying, diceKept) = self.players[self.currentPlayer].decideNextMove(
+                            diceRoll)
+                        selectionValid = self.validPlayerDiceSelection(
+                            diceRoll, diceKept, keepPlaying)
                         if (selectionValid is not True):
                             self.updateUI(self, selectionValid)
                     (_, turnScore) = FarkleDiceGame.evaluateDices(diceKept)
@@ -379,16 +401,19 @@ class FarkleDiceGame:
                         keepPlaying = True  # must continue if no more dice
                         nbDicesToThrow = 6
                     self.players[self.currentPlayer].addTurnScore(turnScore, diceKept)
-                    self.updateUI(self, "UserSelectedDices", self.currentPlayer, diceRoll, diceKept)
+                    self.updateUI(self, "UserSelectedDices",
+                                  self.currentPlayer, diceRoll, diceKept)
                     if(turnScore == 0 or self.players[self.currentPlayer].score + self.players[self.currentPlayer].turnScore > FarkleDiceGame.WIN_SCORE):
                         scoreForPossibleFollowUp = 0  # No turn follow-up
                         self.players[self.currentPlayer].endTurn(False, diceRoll)
-                        self.updateUI(self, "endTurnNoScore", self.currentPlayer, diceRoll, diceKept)
+                        self.updateUI(self, "endTurnNoScore",
+                                      self.currentPlayer, diceRoll, diceKept)
                         turnOver = True
                     elif (not keepPlaying):
                         scoreForPossibleFollowUp = self.players[self.currentPlayer].turnScore
                         self.players[self.currentPlayer].endTurn(True, diceRoll)
-                        self.updateUI(self, "endTurnScores", self.currentPlayer, diceRoll, diceKept)
+                        self.updateUI(self, "endTurnScores",
+                                      self.currentPlayer, diceRoll, diceKept)
                         turnOver = True
             if (self.players[self.currentPlayer].score == FarkleDiceGame.WIN_SCORE):
                 self.updateUI(self, "gameOver", self.currentPlayer)
@@ -437,7 +462,8 @@ class FarkleDiceGame:
                     verbose("evaluateDices", "Quintuplet found : " + str(i))
                     score = FarkleDiceGame.QUINTUPLET_SCORE
                     diceKept = [x for x in diceRoll if x == i]
-                    # check for additional one or five (sextuplets of ones and fives already taken care of above)
+                    # check for additional one or five (sextuplets of ones and fives already
+                    # taken care of above)
                     if (i != 1):
                         (diceKept, score) = FarkleDiceGame.__keepOnes(diceRoll, diceKept, score)
                     if (i != 5):
@@ -454,7 +480,8 @@ class FarkleDiceGame:
                     verbose("evaluateDices", "Quadruplet found : " + str(i))
                     score = FarkleDiceGame.QUADRUPLET_SCORE
                     diceKept = [x for x in diceRoll if x == i]
-                    # check for additional ones or fives (sextuplets of ones and fives already taken care of above)
+                    # check for additional ones or fives (sextuplets of ones and fives already
+                    # taken care of above)
                     if (i != 1):
                         (diceKept, score) = FarkleDiceGame.__keepOnes(diceRoll, diceKept, score)
                     if (i != 5):
@@ -475,7 +502,8 @@ class FarkleDiceGame:
                         verbose("evaluateDices", "Second triplet found : " + str(i))
                         score += FarkleDiceGame.TRIPLETS_BASE_SCORE * i
                         diceKept += [x for x in diceRoll if x == i]
-                # check for additional fives, additional ones already taken care of by quadruplets, ... above
+                # check for additional fives, additional ones already taken care of by
+                # quadruplets, ... above
                 if (score != FarkleDiceGame.THREE_ONES_SCORE + FarkleDiceGame.TRIPLETS_BASE_SCORE * 5):
                     # check for 1 or 2 fives
                     (diceKept, score) = FarkleDiceGame.__keepFives(diceRoll, diceKept, score)
@@ -564,7 +592,7 @@ def testCases():
         try:
             print(FarkleDiceGame.evaluateDices(diceRoll))
         except ValueError as e:
-            print (e)
+            print(e)
         print()
 
 
@@ -573,8 +601,8 @@ def randomCheck():
     for _ in range(20):
         nbDices = random.choice(FarkleDiceGame.dice)
         diceRoll = game.rollDices(nbDices)
-        print (diceRoll)
-        print (FarkleDiceGame.evaluateDices(diceRoll))
+        print(diceRoll)
+        print(FarkleDiceGame.evaluateDices(diceRoll))
         print()
 
 
@@ -582,21 +610,27 @@ def updateConsoleUI(game, event, currentPlayer=0, diceRoll=[], dicesKept=[], nbD
     if(event in ["endTurnBadThrow"]):
         msg = "Bad roll: " + str(diceRoll)
         cprint(msg, 'white', 'on_red')
-        msg = game.players[currentPlayer].name + " end turn. Score: " + str(game.players[currentPlayer].score)
+        msg = game.players[currentPlayer].name + " end turn. Score: " + \
+            str(game.players[currentPlayer].score)
         cprint(msg, 'white', 'on_blue')
     elif(event in ["endTurnNoScore"]):
         msg = "No score"
         cprint(msg, 'white', 'on_red')
-        msg = game.players[currentPlayer].name + " end turn. Score: " + str(game.players[currentPlayer].score)
+        msg = game.players[currentPlayer].name + " end turn. Score: " + \
+            str(game.players[currentPlayer].score)
         cprint(msg, 'white', 'on_blue')
     elif(event in ["endTurnScores"]):
-        msg = game.players[currentPlayer].name + " end turn. Score: " + str(game.players[currentPlayer].score)
+        msg = game.players[currentPlayer].name + " end turn. Score: " + \
+            str(game.players[currentPlayer].score)
         cprint(msg, 'white', 'on_blue')
     elif(event in ["startTurn"]):
-        msg = "\n" + game.players[currentPlayer].name + " turn. Score: " + str(game.players[currentPlayer].score)
+        msg = "\n" + game.players[currentPlayer].name + \
+            " turn. Score: " + str(game.players[currentPlayer].score)
         cprint(msg, 'white', 'on_blue')
     elif(event in ["turnFollowUp"]):
-        msg = game.players[currentPlayer].name + " decides to follow-up with " + str(game.players[currentPlayer].turnScore) + " points and " + str(nbDicesToThrow) + " dices"
+        msg = game.players[currentPlayer].name + " decides to follow-up with " + \
+            str(game.players[currentPlayer].turnScore) + \
+            " points and " + str(nbDicesToThrow) + " dices"
         print(msg)
     elif(event in ["gameOver"]):
         msg = game.players[currentPlayer].name + " wins !"
@@ -611,7 +645,8 @@ def updateConsoleUI(game, event, currentPlayer=0, diceRoll=[], dicesKept=[], nbD
         msg = "Invalid dice selection"
         cprint(msg, 'white', 'on_red')
     else:
-        print ("Roll:", diceRoll, "Kept:", dicesKept, "Turn score:", game.players[currentPlayer].turnScore)
+        print("Roll:", diceRoll, "Kept:", dicesKept,
+              "Turn score:", game.players[currentPlayer].turnScore)
 
 
 def playComputersGame():

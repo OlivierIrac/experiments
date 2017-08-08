@@ -9,6 +9,7 @@ Created on 15 juin 2017
 import pygame
 from pygame.locals import *
 
+
 def main():
     # Initialise screen
     pygame.init()
@@ -41,4 +42,5 @@ def main():
         pygame.display.flip()
 
 
-if __name__ == '__main__': main()
+if __name__ == '__main__':
+    main()
