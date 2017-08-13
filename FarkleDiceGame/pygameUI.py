@@ -9,15 +9,35 @@ import random
 from threading import Timer
 
 
+def blit_text(surface, text, pos, font, color=(0, 0, 0)):
+    # 2D array where each row is a list of words.
+    words = [word.split(' ') for word in text.splitlines()]
+    space = font.size(' ')[0]  # The width of a space.
+    max_width = surface.get_width()
+    x, y = pos
+    for line in words:
+        for word in line:
+            word_surface = font.render(word, 0, color)
+            word_width, word_height = word_surface.get_size()
+            if x + word_width >= max_width:
+                x = pos[0]  # Reset the x.
+                y += word_height  # Start on new row.
+            surface.blit(word_surface, (x, y))
+            x += word_width + space
+        x = pos[0]  # Reset the x.
+        y += word_height  # Start on new row.
+
+
 class UIObject:
-    def __init__(self, size, position, surface):
-        self.size = size
+    def __init__(self, width, height, position, surface):
+        self.width = width
+        self.height = height
         self.position = position
         self.surface = surface
 
     def isMouseInside(self):
         mx, my = pygame.mouse.get_pos()
-        rect = (self.position[0], self.position[1], self.size, self.size)
+        rect = (self.position[0], self.position[1], self.width, self.height)
         if (rect[0] <= mx <= rect[0] + rect[2] and rect[1] <= my <= rect[1] + rect[3]):
             return True
         else:
@@ -30,15 +50,58 @@ class UIObject:
         raise NotImplementedError()  # pure virtual
 
 
+class ButtonUI(UIObject):
+    def __init__(self, text, color, width, height, position, surface):
+        self.heightMargin = 10
+        self.widthMargin = 10
+        if(height == 0):
+            self.font = pygame.font.SysFont('Calibri', 10)
+        else:
+            self.font = pygame.font.SysFont('Calibri', height)
+        self.height = self.font.size(text)[1] + self.heightMargin
+        if(width == 0):
+            self.width = self.font.size(text)[0] + self.widthMargin
+        self.position = position
+        self.surface = surface
+        self.text = text
+        self.textColor = pygame.Color('white')
+        self.backgroundColor = color
+        self.backgroundHoverColor = color
+        self.borderColor = (0, 0, 0)
+        self.borderHoverColor = (100, 100, 255)
+        self.borderThickness = 1
+
+    def handleEvent(self, event):
+        if (event.type == pygame.MOUSEBUTTONUP and event.button == 1):
+            if (self.isMouseInside()):
+                return "buttonClicked"
+
+    def draw(self):
+        rect = (self.position[0], self.position[1], self.width, self.height)
+        if (self.isMouseInside()):
+            pygame.draw.rect(self.surface, self.backgroundHoverColor, pygame.Rect(rect))
+            pygame.draw.rect(self.surface, self.borderHoverColor,
+                             pygame.Rect(rect), self.borderThickness)
+        else:
+            pygame.draw.rect(self.surface, self.backgroundColor, pygame.Rect(rect))
+            pygame.draw.rect(self.surface, self.borderColor,
+                             pygame.Rect(rect), self.borderThickness)
+
+        blit_text(self.surface, self.text, (self.position[0] + int(
+            self.widthMargin / 2), self.position[1] + int(self.heightMargin / 2)), self.font, self.textColor)
+
+
 class DiceUI(UIObject):
-    def __init__(self, diceValue, size, position, surface):
-        super().__init__(size, position, surface)
+    def __init__(self, diceValue, size, position, surface, selectable=True):
+        super().__init__(size, size, position, surface)
+        self.size = size
         self.diceValue = diceValue
+        self.selectable = selectable
         self.backgroundColor = (255, 255, 255)
         self.backgroundHoverColor = (190, 190, 255)
-        self.backgroundSelectedColor = (150, 150, 255)
+        self.backgroundSelectedColor = (255, 255, 255)
         self.borderColor = (0, 0, 0)
-        self.borderSelectedColor = (0, 0, 0)
+        self.borderSelectedColor = (50, 50, 255)
         self.dotColor = (0, 0, 0)
         self.selected = False
         self.borderThickness = 1
@@ -75,22 +138,27 @@ class DiceUI(UIObject):
         ]
 
     def select(self):
-        self.selected = True
+        if(self.selectable):
+            self.selected = True
 
     def unselect(self):
         self.selected = False
 
     def toggleSelect(self):
-        self.selected = not self.selected
+        if(self.selectable):
+            self.selected = not self.selected
+
+    def isSelected(self):
+        return self.selected
 
     def handleEvent(self, event):
         if (event.type == pygame.MOUSEBUTTONUP and event.button == 1):
-            if (self.isMouseInside()):
+            if (self.isMouseInside() and self.selectable):
                 self.toggleSelect()
 
     def draw(self):
         rect = (self.position[0], self.position[1], self.size, self.size)
-        if (self.isMouseInside()):
+        if (self.isMouseInside() and self.selectable):
             pygame.draw.rect(self.surface, self.backgroundHoverColor, pygame.Rect(rect))
         elif (self.selected):
             pygame.draw.rect(self.surface, self.backgroundSelectedColor, pygame.Rect(rect))
@@ -103,21 +171,29 @@ class DiceUI(UIObject):
             pygame.draw.rect(self.surface, self.borderColor,
                              pygame.Rect(rect), self.borderThickness)
         for dot in self.dotPosition[self.diceValue - 1]:
-            pygame.draw.circle(self.surface, self.dotColor, (
-                self.position[0] + dot[0],
-                self.position[1] + dot[1]),
-                self.dotSize)
+            if (self.dotSize >= 2):
+                pygame.draw.circle(self.surface, self.dotColor, (
+                    self.position[0] + dot[0],
+                    self.position[1] + dot[1]),
+                    self.dotSize)
+            else:
+                self.surface.fill(self.dotColor, (
+                    (self.position[0] + dot[0] - 1,
+                     self.position[1] + dot[1] - 1),
+                    (2, 2)))
 
 
 class DiceRollUI(UIObject):
-    def __init__(self, diceRoll, size, position, gap, surface):
-        super().__init__(size, position, surface)
+    def __init__(self, diceRoll, gap, size, position, surface, selectable=True):
+        super().__init__(len(diceRoll) * (size + gap), size, position, surface)
+        self.size = size
         self.diceDraw = []
         self.diceRoll = diceRoll
         self.gap = gap
+        self.selectable = selectable
         for n in range(0, len(diceRoll)):
             self.diceDraw.append(
-                DiceUI(diceRoll[n], size, (position[0] + n * (size + gap), position[1]), surface))
+                DiceUI(diceRoll[n], size, (position[0] + n * (size + gap), position[1]), surface, self.selectable))
 
     def __updateThrowAnimation(self):
         for n in range(0, len(self.diceRoll)):
@@ -140,53 +216,12 @@ class DiceRollUI(UIObject):
     def handleEvent(self, event):
         if (event.type == pygame.MOUSEBUTTONUP and event.button == 1):
             for dice in self.diceDraw:
-                if (dice.isMouseInside()):
+                if(dice.isMouseInside()):
                     dice.toggleSelect()
 
-
-pygame.init()
-screen = pygame.display.set_mode((1000, 600))
-clock = pygame.time.Clock()
-
-# Create The Backgound
-background = pygame.Surface(screen.get_size())
-background = background.convert()
-background.fill((0, 160, 0))
-
-random.seed()
-UIObjects = []
-
-for n in range(1, 7):
-    dice = DiceUI(n, 50, (n * 60, 10), screen)
-    UIObjects.append(dice)
-
-for n in range(1, 7):
-    dice = DiceUI(n, 25, (n * 30, 100), screen)
-    UIObjects.append(dice)
-
-diceRoll = [1, 2, 3, 4, 5, 6]
-diceRollDraw = DiceRollUI(diceRoll, 50, (10, 200), 20, screen)
-UIObjects.append(diceRollDraw)
-
-diceRoll = [2, 2, 2, 5, 3]
-diceRollDraw = DiceRollUI(diceRoll, 50, (10, 300), 20, screen)
-UIObjects.append(diceRollDraw)
-
-done = False
-while (not done):
-    pygame.display.set_caption(" FPS : {:.4}".format(clock.get_fps()))
-    event = pygame.event.poll()
-
-    if (event.type == pygame.QUIT):
-        done = True
-    if (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
-        done = True
-
-    screen.blit(background, (0, 0))
-
-    for UIObject in UIObjects:
-        UIObject.handleEvent(event)
-        UIObject.draw()
-
-    pygame.display.flip()
-    clock.tick(120)
+    def getDiceSelection(self):
+        diceSelection = []
+        for dice in self.diceDraw:
+            if(dice.isSelected()):
+                diceSelection.append(dice.diceValue)
+        return diceSelection
