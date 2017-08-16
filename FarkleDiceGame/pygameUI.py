@@ -51,7 +51,7 @@ class UIObject:
 
 
 class ButtonUI(UIObject):
-    def __init__(self, text, color, width, height, position, surface):
+    def __init__(self, text, textColor, color, width, height, position, surface):
         self.heightMargin = 10
         self.widthMargin = 10
         if(height == 0):
@@ -64,7 +64,7 @@ class ButtonUI(UIObject):
         self.position = position
         self.surface = surface
         self.text = text
-        self.textColor = pygame.Color('white')
+        self.textColor = textColor
         self.backgroundColor = color
         self.backgroundHoverColor = color
         self.borderColor = (0, 0, 0)
@@ -74,7 +74,7 @@ class ButtonUI(UIObject):
     def handleEvent(self, event):
         if (event.type == pygame.MOUSEBUTTONUP and event.button == 1):
             if (self.isMouseInside()):
-                return "buttonClicked"
+                return "buttonPressed"
 
     def draw(self):
         rect = (self.position[0], self.position[1], self.width, self.height)
@@ -90,14 +90,56 @@ class ButtonUI(UIObject):
         blit_text(self.surface, self.text, (self.position[0] + int(
             self.widthMargin / 2), self.position[1] + int(self.heightMargin / 2)), self.font, self.textColor)
 
+    def update(self, text):
+        self.text = text
+
+
+class MsgBoxUI(UIObject):
+    def __init__(self, text, textColor, color, width, height, fontSize, position, surface):
+        self.heightMargin = 10
+        self.widthMargin = 10
+        self.font = pygame.font.SysFont('Calibri', fontSize)
+        self.height = height
+        self.width = width
+        self.position = position
+        self.surface = surface
+        self.text = text
+        self.textColor = textColor
+        self.backgroundColor = color
+        self.backgroundHoverColor = color
+        self.borderColor = (0, 0, 0)
+        self.borderHoverColor = (100, 100, 255)
+        self.borderThickness = 1
+
+    def handleEvent(self, event):
+        pass
+
+    def draw(self):
+        rect = (self.position[0], self.position[1], self.width, self.height)
+        if (self.isMouseInside()):
+            pygame.draw.rect(
+                self.surface, self.backgroundHoverColor, pygame.Rect(rect))
+            pygame.draw.rect(self.surface, self.borderHoverColor,
+                             pygame.Rect(rect), self.borderThickness)
+        else:
+            pygame.draw.rect(self.surface, self.backgroundColor, pygame.Rect(rect))
+            pygame.draw.rect(self.surface, self.borderColor,
+                             pygame.Rect(rect), self.borderThickness)
+
+        blit_text(self.surface, self.text, (self.position[0] + int(
+            self.widthMargin / 2), self.position[1] + int(self.heightMargin / 2)), self.font, self.textColor)
+
+    def update(self, text):
+        self.text = text
+
 
 class DiceUI(UIObject):
-    def __init__(self, diceValue, size, position, surface, selectable=True):
+    def __init__(self, diceValue, size, position, surface, color=pygame.Color('white'), selectable=False):
         super().__init__(size, size, position, surface)
         self.size = size
         self.diceValue = diceValue
         self.selectable = selectable
-        self.backgroundColor = (255, 255, 255)
+        self.backgroundColor = color
         self.backgroundHoverColor = (190, 190, 255)
         self.backgroundSelectedColor = (255, 255, 255)
         self.borderColor = (0, 0, 0)
@@ -137,16 +179,22 @@ class DiceUI(UIObject):
             ]
         ]
 
+    def update(self, diceValue, color=pygame.Color('white'), selectable=False):
+        self.backgroundColor = color
+        self.diceValue = diceValue
+        self.selectable = selectable
+
+    def setColor(self, color=pygame.Color('white')):
+        self.backgroundColor = color
+
     def select(self):
-        if(self.selectable):
-            self.selected = True
+        self.selected = True
 
     def unselect(self):
         self.selected = False
 
     def toggleSelect(self):
-        if(self.selectable):
-            self.selected = not self.selected
+        self.selected = not self.selected
 
     def isSelected(self):
         return self.selected
@@ -157,6 +205,8 @@ class DiceUI(UIObject):
                 self.toggleSelect()
 
     def draw(self):
+        if(self.diceValue == 0):
+            return  # draw nothing "empty dice"
         rect = (self.position[0], self.position[1], self.size, self.size)
         if (self.isMouseInside() and self.selectable):
             pygame.draw.rect(self.surface, self.backgroundHoverColor, pygame.Rect(rect))
@@ -184,34 +234,56 @@ class DiceUI(UIObject):
 
 
 class DiceRollUI(UIObject):
-    def __init__(self, diceRoll, gap, size, position, surface, selectable=True):
+    def __init__(self, diceRoll, gap, size, position, surface, color=pygame.Color('white'), selectable=False, throwTime=0):
         super().__init__(len(diceRoll) * (size + gap), size, position, surface)
         self.size = size
         self.diceDraw = []
         self.diceRoll = diceRoll
         self.gap = gap
         self.selectable = selectable
+        self.throwTime = throwTime
+        self.animation = False
+        self.animationEvent = pygame.USEREVENT
+        self.nbDicesToDraw = len(diceRoll)
+        self.color = color
         for n in range(0, len(diceRoll)):
             self.diceDraw.append(
-                DiceUI(diceRoll[n], size, (position[0] + n * (size + gap), position[1]), surface, self.selectable))
+                DiceUI(diceRoll[n], size, (position[0] + n * (size + gap), position[1]), surface, color, self.selectable))
 
-    def __updateThrowAnimation(self):
-        for n in range(0, len(self.diceRoll)):
-            dice = DiceUI(random.randint(1, 6), self.size,
-                          (self.position[0] + n * (self.size + self.gap), self.position[1]), self.surface)
-            dice.draw(self.surface)
+    def update(self, diceRoll, color=pygame.Color('white'), selectable=False, throwTime=0):
+        self.__init__(diceRoll, self.gap, self.size, self.position,
+                      self.surface, color, selectable, throwTime)
 
-    def draw(self, throwTime=0):
-        # throwTime in seconds
-        if(throwTime == 0):
-            # no throw animation
+    def startAnimation(self, animationColor=pygame.Color('white')):
+        if(len(self.diceRoll) != 0):
             for dice in self.diceDraw:
-                dice.draw()
-        else:
-            # throw animation
-            # FIXME: RuntimeError: can't start new thread
-            t = Timer(throwTime, self.__updateThrowAnimation)
-            t.start()
+                dice.setColor(animationColor)
+            self.animation = True
+            pygame.time.set_timer(self.animationEvent, self.throwTime)
+            self.nbDicesToDraw = 0
+            return self.animationEvent
+
+    def updateAnimation(self):
+        if(self.animation):
+            pygame.time.set_timer(self.animationEvent, self.throwTime)
+            self.nbDicesToDraw += 1
+            if(self.nbDicesToDraw == len(self.diceRoll)):
+                self.stopAnimation()
+
+    def stopAnimation(self):
+        self.animation = False
+        pygame.time.set_timer(self.animationEvent, 0)
+        self.nbDicesToDraw = len(self.diceRoll)
+        for dice in self.diceDraw:
+            dice.setColor(self.color)
+
+    def isAnimationComplete(self):
+        return(not self.animation)
+
+    def draw(self):
+        if(self.nbDicesToDraw != 0):
+            for n in range(0, self.nbDicesToDraw):
+                self.diceDraw[n].draw()
 
     def handleEvent(self, event):
         if (event.type == pygame.MOUSEBUTTONUP and event.button == 1):
