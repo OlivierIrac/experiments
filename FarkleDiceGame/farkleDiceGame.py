@@ -123,6 +123,7 @@ class Player:
 
     def addTurnScore(self, score, dicesKept):
         self.turnScore += score
+        dicesKept.sort()
         self.turnDicesKept += dicesKept + [0]
 
     def endTurn(self, turnScore, diceRoll):

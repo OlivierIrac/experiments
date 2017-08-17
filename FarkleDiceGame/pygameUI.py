@@ -108,7 +108,7 @@ class MsgBoxUI(UIObject):
         self.backgroundColor = color
         self.backgroundHoverColor = color
         self.borderColor = (0, 0, 0)
-        self.borderHoverColor = (100, 100, 255)
+        self.borderHoverColor = self.borderColor
         self.borderThickness = 1
 
     def handleEvent(self, event):
