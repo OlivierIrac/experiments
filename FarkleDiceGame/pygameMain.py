@@ -103,9 +103,6 @@ class FarklePygameUI:
             self.turnInfoBox.update(msg)
         elif(gameEvent in ["gameOver"]):
             msg = "Game over : " + game.players[currentPlayer].name + " wins !"
-            playersByScore = sorted(game.players, key=lambda x: x.score, reverse=True)
-            for player in playersByScore:
-                msg += player.name + str(player.score)
             self.turnInfoBox.update(msg)
         elif(gameEvent in ["mustKeepAllScoringDicesToStop"]):
             self.turnInfoBox.update("You must keep all scoring dices to end turn.")
@@ -115,7 +112,7 @@ class FarklePygameUI:
             self.diceRollUI.update(diceRoll, pygame.Color('white'), False, self.animationTime)
             self.animationEvent = self.diceRollUI.startAnimation()
             pygame.time.set_timer(self.diceKeptUpdateEvent,
-                                  self.animationTime * len(diceRoll) + 2000)
+                                  self.animationTime * len(diceRoll) + 1000)
 
         while(not done):
             self.screen.blit(self.background, (0, 0))
@@ -152,12 +149,9 @@ class FarklePygameUI:
                     pygame.quit()
                     quit()
                 else:
-                    done = True
-
-        # complete all on-going animations
-        # FIXME: not working, UI is out of sync
-        self.animationEvent = self.diceRollUI.stopAnimation()
-        pygame.time.set_timer(self.diceKeptUpdateEvent, 1)
+                    # complete all on-going animations
+                    self.animationEvent = self.diceRollUI.stopAnimation()
+                    pygame.time.set_timer(self.diceKeptUpdateEvent, 1)
 
 
 playGame()
