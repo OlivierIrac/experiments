@@ -4,6 +4,7 @@ Created on 10 august 2017
 @author: irac1
 '''
 
+import os
 from farkleDiceGame import FarkleDiceGame, GameStatistics
 from pygameUI import *
 
@@ -58,7 +59,7 @@ class FarklePygameUI:
         self.diceRollAnimationEvent = 0
         self.diceKeptUpdateEvent = pygame.USEREVENT + 1
         self.animationTime = 300
-        self.thinkTime = 1000  # Animation pause time after dice roll for computer to "think"
+        self.thinkTime = 400  # Animation pause time after dice roll for computer to "think"
         self.diceRoll = []
 
         # Create The Backgound
@@ -74,6 +75,7 @@ class FarklePygameUI:
         self.UIObjects.append(self.infoBox)
 
         self.endAnimationMsg = ""
+        self.endAnimationSound = False
         self.turnInfoBox = MsgBoxUI("", pygame.Color('black'), pygame.Color(
             'white'), 480, 30, 16, (10, 50), self.screen)
         self.UIObjects.append(self.turnInfoBox)
@@ -96,8 +98,14 @@ class FarklePygameUI:
         self.buttonStopTurn = ButtonUI("Next", pygame.Color(
             'white'), pygame.Color('green'), 0, 0, (10, 200), self.screen)
         self.UIObjects.append(self.buttonStopTurn)
+        
+        # load sounds
+        self.keepDiceSound = pygame.mixer.Sound("334764__dneproman__ma-sfx-8bit-tech-gui-9.wav")
+        self.badSound = pygame.mixer.Sound("382310__myfox14__game-over-arcade.wav")
+        self.goodSound = pygame.mixer.Sound("368691__fartbiscuit1700__8-bit-arcade-video-game-start-sound-effect-gun-reload-and-jump.wav")
 
-    def startDiceAnimation(self, msg):
+
+    def startDiceAnimation(self, msg, sound=False):
         self.diceRollUI.update(self.diceRoll, pygame.Color('white'), False, self.animationTime)
         self.diceRollAnimationEvent = self.diceRollUI.startAnimation()
         self.diceKeptAnimationStep = 0
@@ -106,7 +114,8 @@ class FarklePygameUI:
         pygame.time.set_timer(self.diceKeptUpdateEvent,
                               self.animationTime * len(self.diceRoll) + self.thinkTime)
         self.endAnimationMsg = msg
-        self.turnInfoBox.update("Thinking ...")
+        self.endAnimationSound = sound
+        self.turnInfoBox.update("Rolling dices and thinking ...")
 
     def completeDiceAnimation(self):
         # fast forward all on-going animations
@@ -143,15 +152,17 @@ class FarklePygameUI:
         # process Farkle Game events
         # updates infoBox, diceroll, dicekept UI elements, starts animations
         if(gameEvent in ["endTurnBadThrow"]):
-            self.startDiceAnimation("End turn : bad roll!")
+            self.startDiceAnimation("End turn : bad roll!", self.badSound)
         elif(gameEvent in ["endTurnNoScore"]):
             self.stopDiceAnimation()
             self.turnInfoBox.update("End turn : No score !")
+            self.badSound.play()
         elif(gameEvent in ["endTurnScores"]):
             self.stopDiceAnimation()
             self.diceRollUI.update([])
             msg = 'End turn : ' + str(game.players[currentPlayer].turnScore)
             self.turnInfoBox.update(msg)
+            self.goodSound.play()
         elif(gameEvent in ["startTurn"]):
             self.turnDiceKept = []
             self.turnDiceKeptUI.update([])
@@ -223,6 +234,8 @@ class FarklePygameUI:
                         self.turnDiceKept = list(game.players[currentPlayer].turnDicesKept)
                         self.turnDiceKeptUI.update(self.turnDiceKept)
                         self.stopDiceAnimation()
+                        if(self.endAnimationSound):
+                            self.endAnimationSound.play()
                         # done = True
                     else:
                         # remove one by one, dices kept from dice roll
@@ -232,6 +245,7 @@ class FarklePygameUI:
                         self.dicesKeptAnimation.append(self.dicesKept[self.diceKeptAnimationStep])
                         self.turnDiceKeptUI.update(self.dicesKeptAnimation)
                         pygame.time.set_timer(self.diceKeptUpdateEvent, self.animationTime)
+                        self.keepDiceSound.play()
                         self.diceKeptAnimationStep += 1
 
 

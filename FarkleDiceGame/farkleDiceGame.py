@@ -6,7 +6,6 @@ Created on 26 juil. 2017
 import random
 import os
 import pickle
-from termcolor import cprint
 
 
 def verbose(category, *args):

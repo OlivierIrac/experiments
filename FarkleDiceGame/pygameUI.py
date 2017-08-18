@@ -8,7 +8,7 @@ import pygame
 import random
 from threading import Timer
 
-font = ('Calibri', int(96 / 72 * 11))  # size in pixels = points * 96 / 72
+font = ('Calibri', int(11 * 96 / 72))  # size in pixels = points * 96 / 72
 
 
 def highlight(color):
@@ -64,7 +64,6 @@ class ButtonUI(UIObject):
     def __init__(self, text, textColor, color, width, height, position, surface):
         self.heightMargin = 10
         self.widthMargin = 10
-        print(font)
         if(height == 0):
             self.font = pygame.font.SysFont(font[0], font[1], True)
         else:
@@ -79,7 +78,7 @@ class ButtonUI(UIObject):
         self.backgroundColor = color
         self.backgroundHoverColor = highlight(color)
         self.borderColor = darken(color)
-        self.borderHoverColor = highlight(self.borderColor)
+        self.borderHoverColor = darken(self.borderColor)
         self.borderThickness = 1
 
     def handleEvent(self, event):
@@ -109,6 +108,7 @@ class MsgBoxUI(UIObject):
     def __init__(self, text, textColor, color, width, height, fontSize, position, surface):
         self.font = pygame.font.SysFont(font[0], font[1])
         self.leftMargin = 10
+        self.topMargin = 10
         self.height = height
         self.width = width
         self.position = position
@@ -137,7 +137,7 @@ class MsgBoxUI(UIObject):
                              pygame.Rect(rect), self.borderThickness)
 
         blit_text(self.surface, self.text,
-                  (self.position[0] + self.leftMargin, self.position[1]), self.font, self.textColor)
+                  (self.position[0] + self.leftMargin, self.position[1] + self.topMargin), self.font, self.textColor)
 
     def update(self, text):
         self.text = text
