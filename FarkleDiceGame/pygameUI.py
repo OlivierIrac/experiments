@@ -8,6 +8,16 @@ import pygame
 import random
 from threading import Timer
 
+font = ('Calibri', int(96 / 72 * 11))  # size in pixels = points * 96 / 72
+
+
+def highlight(color):
+    return tuple(min(c + 50, 255) for c in color)
+
+
+def darken(color):
+    return tuple(max(c - 50, 0) for c in color)
+
 
 def blit_text(surface, text, pos, font, color=(0, 0, 0)):
     # 2D array where each row is a list of words.
@@ -17,7 +27,7 @@ def blit_text(surface, text, pos, font, color=(0, 0, 0)):
     x, y = pos
     for line in words:
         for word in line:
-            word_surface = font.render(word, 0, color)
+            word_surface = font.render(word, True, color)
             word_width, word_height = word_surface.get_size()
             if x + word_width >= max_width:
                 x = pos[0]  # Reset the x.
@@ -54,21 +64,22 @@ class ButtonUI(UIObject):
     def __init__(self, text, textColor, color, width, height, position, surface):
         self.heightMargin = 10
         self.widthMargin = 10
+        print(font)
         if(height == 0):
-            self.font = pygame.font.SysFont('Calibri', 10)
+            self.font = pygame.font.SysFont(font[0], font[1], True)
         else:
-            self.font = pygame.font.SysFont('Calibri', height)
-        self.height = self.font.size(text)[1] + self.heightMargin
+            self.font = pygame.font.SysFont(font[0], height, True)
+        self.height = self.font.size(text)[1] + 2 * self.heightMargin
         if(width == 0):
-            self.width = self.font.size(text)[0] + self.widthMargin
+            self.width = self.font.size(text)[0] + 2 * self.widthMargin
         self.position = position
         self.surface = surface
         self.text = text
         self.textColor = textColor
         self.backgroundColor = color
-        self.backgroundHoverColor = color
-        self.borderColor = (0, 0, 0)
-        self.borderHoverColor = (100, 100, 255)
+        self.backgroundHoverColor = highlight(color)
+        self.borderColor = darken(color)
+        self.borderHoverColor = highlight(self.borderColor)
         self.borderThickness = 1
 
     def handleEvent(self, event):
@@ -87,8 +98,8 @@ class ButtonUI(UIObject):
             pygame.draw.rect(self.surface, self.borderColor,
                              pygame.Rect(rect), self.borderThickness)
 
-        blit_text(self.surface, self.text, (self.position[0] + int(
-            self.widthMargin / 2), self.position[1] + int(self.heightMargin / 2)), self.font, self.textColor)
+        blit_text(self.surface, self.text, (self.position[0] + self.widthMargin,
+                                            self.position[1] + self.heightMargin), self.font, self.textColor)
 
     def update(self, text):
         self.text = text
@@ -96,9 +107,8 @@ class ButtonUI(UIObject):
 
 class MsgBoxUI(UIObject):
     def __init__(self, text, textColor, color, width, height, fontSize, position, surface):
-        self.heightMargin = 10
-        self.widthMargin = 10
-        self.font = pygame.font.SysFont('Calibri', fontSize)
+        self.font = pygame.font.SysFont(font[0], font[1])
+        self.leftMargin = 10
         self.height = height
         self.width = width
         self.position = position
@@ -107,7 +117,7 @@ class MsgBoxUI(UIObject):
         self.textColor = textColor
         self.backgroundColor = color
         self.backgroundHoverColor = color
-        self.borderColor = (0, 0, 0)
+        self.borderColor = darken(color)
         self.borderHoverColor = self.borderColor
         self.borderThickness = 1
 
@@ -126,8 +136,8 @@ class MsgBoxUI(UIObject):
             pygame.draw.rect(self.surface, self.borderColor,
                              pygame.Rect(rect), self.borderThickness)
 
-        blit_text(self.surface, self.text, (self.position[0] + int(
-            self.widthMargin / 2), self.position[1] + int(self.heightMargin / 2)), self.font, self.textColor)
+        blit_text(self.surface, self.text,
+                  (self.position[0] + self.leftMargin, self.position[1]), self.font, self.textColor)
 
     def update(self, text):
         self.text = text
@@ -142,7 +152,7 @@ class DiceUI(UIObject):
         self.backgroundColor = color
         self.backgroundHoverColor = (190, 190, 255)
         self.backgroundSelectedColor = (255, 255, 255)
-        self.borderColor = (0, 0, 0)
+        self.borderColor = (100, 100, 100)
         self.borderSelectedColor = (50, 50, 255)
         self.dotColor = (0, 0, 0)
         self.selected = False

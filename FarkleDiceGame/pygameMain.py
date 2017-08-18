@@ -69,17 +69,17 @@ class FarklePygameUI:
         # Creates the UI objects
         self.UIObjects = []
 
-        self.infoBox = MsgBoxUI("", pygame.Color('white'), pygame.Color(
-            'blue'), 480, 30, 16, (10, 10), self.screen)
+        self.infoBox = MsgBoxUI("", pygame.Color('black'), pygame.Color(
+            'white'), 480, 30, 16, (10, 10), self.screen)
         self.UIObjects.append(self.infoBox)
 
         self.endAnimationMsg = ""
-        self.turnInfoBox = MsgBoxUI("", pygame.Color('white'), pygame.Color(
-            'blue'), 480, 30, 16, (10, 50), self.screen)
+        self.turnInfoBox = MsgBoxUI("", pygame.Color('black'), pygame.Color(
+            'white'), 480, 30, 16, (10, 50), self.screen)
         self.UIObjects.append(self.turnInfoBox)
 
-        self.scoreBox = MsgBoxUI("", pygame.Color('white'), pygame.Color(
-            'blue'), 150, 70, 16, (500, 10), self.screen)
+        self.scoreBox = MsgBoxUI("", pygame.Color('black'), pygame.Color(
+            'white'), 150, 70, 16, (500, 10), self.screen)
         self.UIObjects.append(self.scoreBox)
 
         self.diceRollUI = DiceRollUI([], 10, 50, (10, 100), self.screen,
@@ -94,7 +94,7 @@ class FarklePygameUI:
         self.UIObjects.append(self.turnDiceKeptUI)
 
         self.buttonStopTurn = ButtonUI("Next", pygame.Color(
-            'white'), pygame.Color('blue'), 0, 16, (10, 200), self.screen)
+            'white'), pygame.Color('green'), 0, 0, (10, 200), self.screen)
         self.UIObjects.append(self.buttonStopTurn)
 
     def startDiceAnimation(self, msg):
