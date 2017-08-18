@@ -71,6 +71,35 @@ def randomCheck():
         print()
 
 
+def decideNextMoveUI(diceRoll):
+    diceKept = []
+    done = False
+    keepPlaying = True
+    msg = "Dice roll:" + str(diceRoll)
+    cprint(msg, 'white', 'on_green')
+    print("(1-6, empty to end & continue, anykey for end & stop turn)")
+    while(not done):
+        dice = input("?")
+        if (dice in ['1', '2', '3', '4', '5', '6']):
+            diceKept.append(int(dice))
+        elif (dice != ''):
+            done = True
+            keepPlaying = False
+        else:
+            done = True
+    return (keepPlaying, diceKept)
+
+
+def wantToFollowUpUI(score, nbDices):
+    msg = "Do you want to follow-up on " + \
+        str(score) + " points with " + str(nbDices) + " dices? (y/n)"
+    key = input(msg)
+    if(key == "y"):
+        return True
+    else:
+        return False
+
+
 def updateConsoleUI(game, event, currentPlayer=0, diceRoll=[], dicesKept=[], nbDicesToThrow=0):
     if(event in ["endTurnBadThrow"]):
         msg = "Bad roll: " + str(diceRoll)
@@ -119,10 +148,8 @@ def playComputersGame(nbGames=10):
     winners = [0 for _ in [x * 0.1 for x in computersRisk]]
     for i in range(nbGames):
         game = FarkleDiceGame(updateConsoleUI)
-#    game.addPlayer("Louis", "human")
-#    game.addPlayer("Olivier", "human")
         for risk in [x * 0.1 for x in computersRisk]:
-            game.addPlayer("Computer " + str(risk), "computer", risk)
+            game.addComputerPlayer("Computer " + str(risk), risk)
         winner = game.play()
         winners[winner - 1] += 1
         print("Game #", i)
@@ -131,11 +158,9 @@ def playComputersGame(nbGames=10):
 
 def playHumanVsComputerGame():
     game = FarkleDiceGame(updateConsoleUI)
-    # game.addPlayer("Margot", "human")
-    # game.addPlayer("Louis", "human")
-    game.addPlayer("Olivier", "human")
-    game.addPlayer("Ordi 1.0")
-    game.addPlayer("Ordi 0.9", "computer", 0.9)
+    game.addHumanPlayer("Olivier", decideNextMoveUI, wantToFollowUpUI)
+    game.addComputerPlayer("Ordi 1.0")
+    game.addComputerPlayer("Ordi 0.9", 0.9)
     game.play()
 
 

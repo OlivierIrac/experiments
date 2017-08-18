@@ -261,34 +261,16 @@ class ComputerPlayer(Player):
 
 
 class HumanPlayer(Player):
-    def __init__(self, game, name=""):
+    def __init__(self, game, name, decideNextMoveUI, wantToFollowUpUI):
         super().__init__(game, name)
+        self.decideNextMoveUI = decideNextMoveUI
+        self.wantToFollowUpUI = wantToFollowUpUI
 
     def wantToFollowUp(self, score, nbDices):
-        msg = "Do you want to follow-up on " + \
-            str(score) + " points with " + str(nbDices) + " dices? (y/n)"
-        key = input(msg)
-        if(key == "y"):
-            return True
-        else:
-            return False
+        return self.wantToFollowUpUI(score, nbDices)
 
     def decideNextMove(self, diceRoll):
-        diceKept = []
-        done = False
-        keepPlaying = True
-        msg = "Dice roll:" + str(diceRoll)
-        cprint(msg, 'white', 'on_green')
-        print("(1-6, empty to end & continue, anykey for end & stop turn)")
-        while(not done):
-            dice = input("?")
-            if (dice in ['1', '2', '3', '4', '5', '6']):
-                diceKept.append(int(dice))
-            elif (dice != ''):
-                done = True
-                keepPlaying = False
-            else:
-                done = True
+        (keepPlaying, diceKept) = self.decideNextMoveUI(diceRoll)
         return (keepPlaying, diceKept)
 
 
@@ -327,11 +309,11 @@ class FarkleDiceGame:
         verbose("evaluateDices", diceRoll.count(5), "single fives found")
         return (diceKept, score)
 
-    def addPlayer(self, name="", kind="computer", riskFactor=1.0):
-        if(kind == "computer"):
-            self.players.append(ComputerPlayer(self, name, riskFactor))
-        if(kind == "human"):
-            self.players.append(HumanPlayer(self, name))
+    def addComputerPlayer(self, name, riskFactor=1.0):
+        self.players.append(ComputerPlayer(self, name, riskFactor))
+
+    def addHumanPlayer(self, name, decideNextMoveUI, wantToFollowUpUI):
+        self.players.append(HumanPlayer(self, name, decideNextMoveUI, wantToFollowUpUI))
 
     def rollDices(self, nbDices):
         diceRoll = []
