@@ -14,9 +14,40 @@ def playGame():
     # game.addPlayer("Margot", "human")
     # game.addPlayer("Louis", "human")
     # game.addPlayer("Olivier", "human")
-    game.addPlayer("Ordi 1.0")
-    game.addPlayer("Ordi 0.9", "computer", 0.9)
+    game.addComputerPlayer("Ordi 1.0")
+    game.addComputerPlayer("Ordi 0.9", 0.9)
     game.play()
+
+
+def decideNextMoveUI(diceRoll):
+    # console UI for human player decide next move
+    diceKept = []
+    done = False
+    keepPlaying = True
+    msg = "Dice roll:" + str(diceRoll)
+    cprint(msg, 'white', 'on_green')
+    print("(1-6, empty to end & continue, anykey for end & stop turn)")
+    while(not done):
+        dice = input("?")
+        if (dice in ['1', '2', '3', '4', '5', '6']):
+            diceKept.append(int(dice))
+        elif (dice != ''):
+            done = True
+            keepPlaying = False
+        else:
+            done = True
+    return (keepPlaying, diceKept)
+
+
+def wantToFollowUpUI(score, nbDices):
+    # console UI for human player want to follow up
+    msg = "Do you want to follow-up on " + \
+        str(score) + " points with " + str(nbDices) + " dices? (y/n)"
+    key = input(msg)
+    if(key == "y"):
+        return True
+    else:
+        return False
 
 
 class FarklePygameUI:
@@ -26,7 +57,8 @@ class FarklePygameUI:
         self.clock = pygame.time.Clock()
         self.diceRollAnimationEvent = 0
         self.diceKeptUpdateEvent = pygame.USEREVENT + 1
-        self.animationTime = 500
+        self.animationTime = 300
+        self.thinkTime = 1000  # Animation pause time after dice roll for computer to "think"
         self.diceRoll = []
 
         # Create The Backgound
@@ -72,14 +104,19 @@ class FarklePygameUI:
         self.dicesKeptAnimation = list(self.turnDiceKept)
         self.diceAnimationRunning = True
         pygame.time.set_timer(self.diceKeptUpdateEvent,
-                              self.animationTime * len(self.diceRoll) + self.animationTime)
+                              self.animationTime * len(self.diceRoll) + self.thinkTime)
         self.endAnimationMsg = msg
+        self.turnInfoBox.update("Thinking ...")
 
     def completeDiceAnimation(self):
         # fast forward all on-going animations
         self.diceRollAnimationEvent = self.diceRollUI.stopAnimation()
-        pygame.time.set_timer(self.diceKeptUpdateEvent, 1)
+        for n in range(self.diceKeptAnimationStep, len(self.dicesKept)):
+            self.diceRoll.remove(self.dicesKept[n])
+        self.diceRollUI.update(self.diceRoll)
         self.diceKeptAnimationStep = len(self.dicesKept)
+        # set short timer to manage end of animation update
+        pygame.time.set_timer(self.diceKeptUpdateEvent, 1)
 
     def stopDiceAnimation(self):
         # stop all on-going animations
@@ -112,6 +149,7 @@ class FarklePygameUI:
             self.turnInfoBox.update("End turn : No score !")
         elif(gameEvent in ["endTurnScores"]):
             self.stopDiceAnimation()
+            self.diceRollUI.update([])
             msg = 'End turn : ' + str(game.players[currentPlayer].turnScore)
             self.turnInfoBox.update(msg)
         elif(gameEvent in ["startTurn"]):
@@ -128,6 +166,7 @@ class FarklePygameUI:
                 " points and " + str(nbDicesToThrow) + " dices"
             self.turnInfoBox.update(msg)
         elif(gameEvent in ["gameOver"]):
+            self.diceRollUI.update([])
             self.stopDiceAnimation()
             msg = "Game over : " + game.players[currentPlayer].name + " wins !"
             self.turnInfoBox.update(msg)
@@ -137,10 +176,11 @@ class FarklePygameUI:
         elif(gameEvent in ["invalidDiceSelection"]):
             self.stopDiceAnimation()
             self.turnInfoBox.update("Invalid dice selection")
-        else:
+        elif(gameEvent in "PlayerSelectedDices"):
             msg = "Turn score : " + str(game.players[currentPlayer].turnScore)
             self.startDiceAnimation(msg)
-
+        else:
+            print("Invalid game event")
         while(not done):
             # draw UI
             self.screen.blit(self.background, (0, 0))
@@ -179,7 +219,6 @@ class FarklePygameUI:
                 if(self.diceAnimationRunning):
                     if (self.diceKeptAnimationStep >= len(self.dicesKept)):
                         # reached the end of animation
-                        print("eof of dice animation")
                         self.turnInfoBox.update(self.endAnimationMsg)
                         self.turnDiceKept = list(game.players[currentPlayer].turnDicesKept)
                         self.turnDiceKeptUI.update(self.turnDiceKept)

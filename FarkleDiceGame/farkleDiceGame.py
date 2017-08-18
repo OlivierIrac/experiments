@@ -267,11 +267,12 @@ class HumanPlayer(Player):
         self.wantToFollowUpUI = wantToFollowUpUI
 
     def wantToFollowUp(self, score, nbDices):
+        # returns True/False
         return self.wantToFollowUpUI(score, nbDices)
 
     def decideNextMove(self, diceRoll):
-        (keepPlaying, diceKept) = self.decideNextMoveUI(diceRoll)
-        return (keepPlaying, diceKept)
+        # returns (keepPlaying, diceKept)
+        return self.decideNextMoveUI(diceRoll)
 
 
 class FarkleDiceGame:
@@ -384,7 +385,7 @@ class FarkleDiceGame:
                         keepPlaying = True  # must continue if no more dice
                         nbDicesToThrow = 6
                     self.players[self.currentPlayer].addTurnScore(turnScore, diceKept)
-                    self.updateUI(self, "UserSelectedDices",
+                    self.updateUI(self, "PlayerSelectedDices",
                                   self.currentPlayer, diceRoll, diceKept)
                     if(turnScore == 0 or self.players[self.currentPlayer].score + self.players[self.currentPlayer].turnScore > FarkleDiceGame.WIN_SCORE):
                         scoreForPossibleFollowUp = 0  # No turn follow-up

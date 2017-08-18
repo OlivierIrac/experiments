@@ -72,6 +72,7 @@ def randomCheck():
 
 
 def decideNextMoveUI(diceRoll):
+    # console UI for human player decide next move
     diceKept = []
     done = False
     keepPlaying = True
@@ -91,6 +92,7 @@ def decideNextMoveUI(diceRoll):
 
 
 def wantToFollowUpUI(score, nbDices):
+    # console UI for human player want to follow up
     msg = "Do you want to follow-up on " + \
         str(score) + " points with " + str(nbDices) + " dices? (y/n)"
     key = input(msg)
