@@ -44,6 +44,7 @@ class UIObject:
         self.height = height
         self.position = position
         self.surface = surface
+        self.isShown = True
 
     def isMouseInside(self):
         mx, my = pygame.mouse.get_pos()
@@ -59,9 +60,16 @@ class UIObject:
     def handleEvent(self, event):
         raise NotImplementedError()  # pure virtual
 
+    def show(self):
+        self.isShown = True
+
+    def hide(self):
+        self.isShown = False
+
 
 class ButtonUI(UIObject):
     def __init__(self, text, textColor, color, width, height, position, surface):
+        super().__init__(width, height, position, surface)
         self.heightMargin = 10
         self.widthMargin = 10
         if(height == 0):
@@ -71,34 +79,33 @@ class ButtonUI(UIObject):
         self.height = self.font.size(text)[1] + 2 * self.heightMargin
         if(width == 0):
             self.width = self.font.size(text)[0] + 2 * self.widthMargin
-        self.position = position
-        self.surface = surface
         self.text = text
         self.textColor = textColor
         self.backgroundColor = color
         self.backgroundHoverColor = highlight(color)
         self.borderColor = darken(color)
-        self.borderHoverColor = darken(self.borderColor)
+        self.borderHoverColor = highlight(self.borderColor)
         self.borderThickness = 1
 
     def handleEvent(self, event):
-        if (event.type == pygame.MOUSEBUTTONUP and event.button == 1):
+        if(self.isShown and event.type == pygame.MOUSEBUTTONUP and event.button == 1):
             if (self.isMouseInside()):
                 return "buttonPressed"
 
     def draw(self):
-        rect = (self.position[0], self.position[1], self.width, self.height)
-        if (self.isMouseInside()):
-            pygame.draw.rect(self.surface, self.backgroundHoverColor, pygame.Rect(rect))
-            pygame.draw.rect(self.surface, self.borderHoverColor,
-                             pygame.Rect(rect), self.borderThickness)
-        else:
-            pygame.draw.rect(self.surface, self.backgroundColor, pygame.Rect(rect))
-            pygame.draw.rect(self.surface, self.borderColor,
-                             pygame.Rect(rect), self.borderThickness)
+        if(self.isShown):
+            rect = (self.position[0], self.position[1], self.width, self.height)
+            if (self.isMouseInside()):
+                pygame.draw.rect(self.surface, self.backgroundHoverColor, pygame.Rect(rect))
+                pygame.draw.rect(self.surface, self.borderHoverColor,
+                                 pygame.Rect(rect), self.borderThickness)
+            else:
+                pygame.draw.rect(self.surface, self.backgroundColor, pygame.Rect(rect))
+                pygame.draw.rect(self.surface, self.borderColor,
+                                 pygame.Rect(rect), self.borderThickness)
 
-        blit_text(self.surface, self.text, (self.position[0] + self.widthMargin,
-                                            self.position[1] + self.heightMargin), self.font, self.textColor)
+            blit_text(self.surface, self.text, (self.position[0] + self.widthMargin,
+                                                self.position[1] + self.heightMargin), self.font, self.textColor)
 
     def update(self, text):
         self.text = text
@@ -106,13 +113,10 @@ class ButtonUI(UIObject):
 
 class MsgBoxUI(UIObject):
     def __init__(self, text, textColor, color, width, height, fontSize, position, surface):
+        super().__init__(width, height, position, surface)
         self.font = pygame.font.SysFont(font[0], font[1])
         self.leftMargin = 10
         self.topMargin = 10
-        self.height = height
-        self.width = width
-        self.position = position
-        self.surface = surface
         self.text = text
         self.textColor = textColor
         self.backgroundColor = color

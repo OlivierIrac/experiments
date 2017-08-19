@@ -16,39 +16,9 @@ def playGame():
     # game.addPlayer("Louis", "human")
     # game.addPlayer("Olivier", "human")
     game.addComputerPlayer("Ordi 1.0")
-    game.addComputerPlayer("Ordi 0.9", 0.9)
+    # game.addComputerPlayer("Ordi 0.9", 0.9)
+    game.addHumanPlayer("Olivier", UI.decideNextMoveUI, UI.wantToFollowUpUI)
     game.play()
-
-
-def decideNextMoveUI(diceRoll):
-    # console UI for human player decide next move
-    diceKept = []
-    done = False
-    keepPlaying = True
-    msg = "Dice roll:" + str(diceRoll)
-    cprint(msg, 'white', 'on_green')
-    print("(1-6, empty to end & continue, anykey for end & stop turn)")
-    while(not done):
-        dice = input("?")
-        if (dice in ['1', '2', '3', '4', '5', '6']):
-            diceKept.append(int(dice))
-        elif (dice != ''):
-            done = True
-            keepPlaying = False
-        else:
-            done = True
-    return (keepPlaying, diceKept)
-
-
-def wantToFollowUpUI(score, nbDices):
-    # console UI for human player want to follow up
-    msg = "Do you want to follow-up on " + \
-        str(score) + " points with " + str(nbDices) + " dices? (y/n)"
-    key = input(msg)
-    if(key == "y"):
-        return True
-    else:
-        return False
 
 
 class FarklePygameUI:
@@ -61,6 +31,9 @@ class FarklePygameUI:
         self.animationTime = 300
         self.thinkTime = 400  # Animation pause time after dice roll for computer to "think"
         self.diceRoll = []
+        self.game = 0
+        self.currentPlayer = 0
+        self.keepPlaying = False
 
         # Create The Backgound
         self.background = pygame.Surface(self.screen.get_size())
@@ -95,18 +68,23 @@ class FarklePygameUI:
         self.turnDiceKeptUI = DiceRollUI([], 10, 30, (10, 160), self.screen)
         self.UIObjects.append(self.turnDiceKeptUI)
 
-        self.buttonStopTurn = ButtonUI("Next", pygame.Color(
+        self.buttonContinue = ButtonUI("Continue", pygame.Color(
             'white'), pygame.Color('green'), 0, 0, (10, 200), self.screen)
-        self.UIObjects.append(self.buttonStopTurn)
-        
+        self.UIObjects.append(self.buttonContinue)
+
+        self.buttonStop = ButtonUI("Stop", pygame.Color(
+            'white'), pygame.Color('red'), 0, 0, (100, 200), self.screen)
+        self.UIObjects.append(self.buttonStop)
+        self.buttonStop.hide()
+
         # load sounds
         self.keepDiceSound = pygame.mixer.Sound("334764__dneproman__ma-sfx-8bit-tech-gui-9.wav")
-        self.badSound = pygame.mixer.Sound("382310__myfox14__game-over-arcade.wav")
-        self.goodSound = pygame.mixer.Sound("368691__fartbiscuit1700__8-bit-arcade-video-game-start-sound-effect-gun-reload-and-jump.wav")
+        self.badSound = pygame.mixer.Sound("43697__notchfilter__game-over02.wav")
+        self.goodSound = pygame.mixer.Sound("345299__scrampunk__okay.wav")
+        self.diceSound = pygame.mixer.Sound("276534__kwahmah-02__cokecan17.wav")
 
-
-    def startDiceAnimation(self, msg, sound=False):
-        self.diceRollUI.update(self.diceRoll, pygame.Color('white'), False, self.animationTime)
+    def startDiceAnimation(self, msg, sound=False, selectable=False):
+        self.diceRollUI.update(self.diceRoll, pygame.Color('white'), selectable, self.animationTime)
         self.diceRollAnimationEvent = self.diceRollUI.startAnimation()
         self.diceKeptAnimationStep = 0
         self.dicesKeptAnimation = list(self.turnDiceKept)
@@ -115,7 +93,7 @@ class FarklePygameUI:
                               self.animationTime * len(self.diceRoll) + self.thinkTime)
         self.endAnimationMsg = msg
         self.endAnimationSound = sound
-        self.turnInfoBox.update("Rolling dices and thinking ...")
+        self.turnInfoBox.update("Rolling dices...")
 
     def completeDiceAnimation(self):
         # fast forward all on-going animations
@@ -133,9 +111,31 @@ class FarklePygameUI:
         pygame.time.set_timer(self.diceKeptUpdateEvent, 0)
         self.diceAnimationRunning = False
 
+    def decideNextMoveUI(self, diceRoll):
+        # console UI for human player decide next move
+        self.diceRoll = diceRoll
+        self.startDiceAnimation("Select dices", 0, True)
+        self.dicesKept = []
+        self.buttonStop.show()
+        self.UIMainLoop(False)
+        return(self.keepPlaying, self.dicesKept)
+        self.buttonStop.hide()
+
+    def wantToFollowUpUI(self, score, nbDices):
+        # console UI for human player want to follow up
+        msg = "Do you want to follow-up on " + \
+            str(score) + " points with " + str(nbDices) + " dices? (y/n)"
+        key = input(msg)
+        if(key == "y"):
+            return True
+        else:
+            return False
+
     def updatePygameUI(self, game, gameEvent, currentPlayer=0, diceRoll=[], dicesKept=[], nbDicesToThrow=0):
         self.dicesKept = dicesKept
         self.diceRoll = diceRoll
+        self.game = game
+        self.currentPlayer = currentPlayer
 
         # update score box
         msg = ""
@@ -192,6 +192,10 @@ class FarklePygameUI:
             self.startDiceAnimation(msg)
         else:
             print("Invalid game event")
+
+        self.UIMainLoop(done)
+
+    def UIMainLoop(self, done):
         while(not done):
             # draw UI
             self.screen.blit(self.background, (0, 0))
@@ -204,10 +208,15 @@ class FarklePygameUI:
             for UIObject in self.UIObjects:
                 objectEvent = UIObject.handleEvent(event)
                 if(objectEvent):
-                    if(UIObject == self.buttonStopTurn and objectEvent == "buttonPressed"):
+                    if(objectEvent == "buttonPressed"):
                         if(self.diceAnimationRunning):
                             self.completeDiceAnimation()
                         else:
+                            self.dicesKept = self.diceRollUI.getDiceSelection()
+                            if(UIObject == self.buttonContinue):
+                                self.keepPlaying = True
+                            elif(UIObject == self.buttonStop):
+                                self.keepPlaying = False
                             done = True
 
             if(event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE)):
@@ -223,6 +232,7 @@ class FarklePygameUI:
             # process animation timer events
             if(event.type == self.diceRollAnimationEvent):
                 # Animate dice roll throw
+                self.diceSound.play()
                 self.diceRollUI.updateAnimation()
 
             if(event.type == self.diceKeptUpdateEvent):
@@ -231,12 +241,11 @@ class FarklePygameUI:
                     if (self.diceKeptAnimationStep >= len(self.dicesKept)):
                         # reached the end of animation
                         self.turnInfoBox.update(self.endAnimationMsg)
-                        self.turnDiceKept = list(game.players[currentPlayer].turnDicesKept)
+                        self.turnDiceKept = list(self.game.players[self.currentPlayer].turnDicesKept)
                         self.turnDiceKeptUI.update(self.turnDiceKept)
                         self.stopDiceAnimation()
                         if(self.endAnimationSound):
                             self.endAnimationSound.play()
-                        # done = True
                     else:
                         # remove one by one, dices kept from dice roll
                         self.diceRoll.remove(self.dicesKept[self.diceKeptAnimationStep])
