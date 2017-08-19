@@ -122,7 +122,7 @@ class MsgBoxUI(UIObject):
         self.backgroundColor = color
         self.backgroundHoverColor = color
         self.borderColor = darken(color)
-        self.borderHoverColor = self.borderColor
+        self.borderHoverColor = highlight(self.borderColor)
         self.borderThickness = 1
 
     def handleEvent(self, event):
@@ -154,7 +154,7 @@ class DiceUI(UIObject):
         self.diceValue = diceValue
         self.selectable = selectable
         self.backgroundColor = color
-        self.backgroundHoverColor = (190, 190, 255)
+        self.backgroundHoverColor = highlight(self.backgroundColor)
         self.backgroundSelectedColor = (255, 255, 255)
         self.borderColor = (100, 100, 100)
         self.borderSelectedColor = (50, 50, 255)
@@ -266,12 +266,10 @@ class DiceRollUI(UIObject):
 
     def update(self, diceRoll, color=pygame.Color('white'), selectable=False, throwTime=0):
         self.__init__(diceRoll, self.gap, self.size, self.position,
-                      self.surface, color, selectable, throwTime)
+                      self.surface, self.color, selectable, throwTime)
 
-    def startAnimation(self, animationColor=pygame.Color('white')):
+    def startAnimation(self):
         if(len(self.diceRoll) != 0):
-            for dice in self.diceDraw:
-                dice.setColor(animationColor)
             self.animation = True
             pygame.time.set_timer(self.animationEvent, self.throwTime)
             self.nbDicesToDraw = 0
@@ -300,10 +298,8 @@ class DiceRollUI(UIObject):
                 self.diceDraw[n].draw()
 
     def handleEvent(self, event):
-        if (event.type == pygame.MOUSEBUTTONUP and event.button == 1):
-            for dice in self.diceDraw:
-                if(dice.isMouseInside()):
-                    dice.toggleSelect()
+        for dice in self.diceDraw:
+            dice.handleEvent(event)
 
     def getDiceSelection(self):
         diceSelection = []

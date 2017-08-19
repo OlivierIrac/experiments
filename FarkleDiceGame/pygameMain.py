@@ -34,6 +34,7 @@ class FarklePygameUI:
         self.game = 0
         self.currentPlayer = 0
         self.keepPlaying = False
+        self.previousUserSelectionValid = True
 
         # Create The Backgound
         self.background = pygame.Surface(self.screen.get_size())
@@ -57,8 +58,9 @@ class FarklePygameUI:
             'white'), 150, 70, 16, (500, 10), self.screen)
         self.UIObjects.append(self.scoreBox)
 
+        self.dicesColor = (240, 240, 240)
         self.diceRollUI = DiceRollUI([], 10, 50, (10, 100), self.screen,
-                                     pygame.Color('white'), False, self.animationTime)
+                                     self.dicesColor, False, self.animationTime)
         self.UIObjects.append(self.diceRollUI)
 
         self.turnDiceKept = []
@@ -78,13 +80,14 @@ class FarklePygameUI:
         self.buttonStop.hide()
 
         # load sounds
-        self.keepDiceSound = pygame.mixer.Sound("334764__dneproman__ma-sfx-8bit-tech-gui-9.wav")
-        self.badSound = pygame.mixer.Sound("43697__notchfilter__game-over02.wav")
-        self.goodSound = pygame.mixer.Sound("345299__scrampunk__okay.wav")
-        self.diceSound = pygame.mixer.Sound("276534__kwahmah-02__cokecan17.wav")
+        self.keepDiceSound = pygame.mixer.Sound(os.path.join("data", "334764__dneproman__ma-sfx-8bit-tech-gui-9.wav"))
+        self.badSound = pygame.mixer.Sound(os.path.join("data", "242503__gabrielaraujo__failure-wrong-action.wav"))
+        self.goodSound = pygame.mixer.Sound(os.path.join("data", "345299__scrampunk__okay.wav"))
+        self.diceSound = pygame.mixer.Sound(os.path.join("data", "276534__kwahmah-02__cokecan17.wav"))
+        self.wrongSelectionSound = pygame.mixer.Sound(os.path.join("data", "142608__autistic-lucario__error.wav"))
 
     def startDiceAnimation(self, msg, sound=False, selectable=False):
-        self.diceRollUI.update(self.diceRoll, pygame.Color('white'), selectable, self.animationTime)
+        self.diceRollUI.update(self.diceRoll, self.dicesColor, selectable, self.animationTime)
         self.diceRollAnimationEvent = self.diceRollUI.startAnimation()
         self.diceKeptAnimationStep = 0
         self.dicesKeptAnimation = list(self.turnDiceKept)
@@ -112,26 +115,31 @@ class FarklePygameUI:
         self.diceAnimationRunning = False
 
     def decideNextMoveUI(self, diceRoll):
-        # console UI for human player decide next move
+        # UI for human player dice selection and stop/continue
         self.diceRoll = diceRoll
-        self.startDiceAnimation("Select dices", 0, True)
         self.dicesKept = []
+        if(self.previousUserSelectionValid):
+            # animate dice roll
+            msg = "Select dices. Turn score : " + str(self.game.players[self.currentPlayer].turnScore)
+            self.startDiceAnimation(msg, 0, True)
+        # else keep current dice roll and wait new selection
         self.buttonStop.show()
         self.UIMainLoop(False)
-        return(self.keepPlaying, self.dicesKept)
         self.buttonStop.hide()
+        self.previousUserSelectionValid = True
+        return(self.keepPlaying, self.dicesKept)
 
     def wantToFollowUpUI(self, score, nbDices):
-        # console UI for human player want to follow up
-        msg = "Do you want to follow-up on " + \
-            str(score) + " points with " + str(nbDices) + " dices? (y/n)"
-        key = input(msg)
-        if(key == "y"):
-            return True
-        else:
-            return False
+        # UI for human player want to follow up
+        msg = "Do you want to continue with " + \
+            str(score) + " points and " + str(nbDices) + " dices?"
+        self.turnInfoBox.update(msg)
+        self.buttonStop.show()
+        self.UIMainLoop(False)
+        self.buttonStop.hide()
+        return self.keepPlaying
 
-    def updatePygameUI(self, game, gameEvent, currentPlayer=0, diceRoll=[], dicesKept=[], nbDicesToThrow=0):
+    def updatePygameUI(self, game, gameEvent, currentPlayer, diceRoll=[], dicesKept=[], nbDicesToThrow=0):
         self.dicesKept = dicesKept
         self.diceRoll = diceRoll
         self.game = game
@@ -141,7 +149,7 @@ class FarklePygameUI:
         msg = ""
         playersByScore = sorted(game.players, key=lambda x: x.score, reverse=True)
         for player in playersByScore:
-            msg += player.name + " " + str(player.score) + "\n"
+            msg += player.name + "    " + str(player.score) + "\n"
         self.scoreBox.update(msg)
 
         # update info box
@@ -172,10 +180,13 @@ class FarklePygameUI:
         elif(gameEvent in ["turnFollowUp"]):
             self.stopDiceAnimation()
             self.turnDiceKeptUI.update([])
-            msg = game.players[currentPlayer].name + " decides to follow-up with " + \
-                str(game.players[currentPlayer].turnScore) + \
-                " points and " + str(nbDicesToThrow) + " dices"
-            self.turnInfoBox.update(msg)
+            if(game.players[currentPlayer].kind == "computer"):
+                msg = game.players[currentPlayer].name + " decides to follow-up with " + \
+                    str(game.players[currentPlayer].turnScore) + \
+                    " points and " + str(nbDicesToThrow) + " dices"
+                self.turnInfoBox.update(msg)
+            else:
+                done = True
         elif(gameEvent in ["gameOver"]):
             self.diceRollUI.update([])
             self.stopDiceAnimation()
@@ -184,12 +195,23 @@ class FarklePygameUI:
         elif(gameEvent in ["mustKeepAllScoringDicesToStop"]):
             self.stopDiceAnimation()
             self.turnInfoBox.update("You must keep all scoring dices to end turn.")
+            self.wrongSelectionSound.play()
+            self.previousUserSelectionValid = False
+            done = True
         elif(gameEvent in ["invalidDiceSelection"]):
             self.stopDiceAnimation()
             self.turnInfoBox.update("Invalid dice selection")
+            self.wrongSelectionSound.play()
+            self.previousUserSelectionValid = False
+            done = True
         elif(gameEvent in "PlayerSelectedDices"):
-            msg = "Turn score : " + str(game.players[currentPlayer].turnScore)
-            self.startDiceAnimation(msg)
+            if(game.players[currentPlayer].kind == "computer"):
+                msg = "Turn score : " + str(game.players[currentPlayer].turnScore)
+                self.startDiceAnimation(msg, False, False)
+            else:
+                self.turnDiceKept = list(self.game.players[self.currentPlayer].turnDicesKept)
+                self.turnDiceKeptUI.update(self.turnDiceKept)
+                done = True
         else:
             print("Invalid game event")
 

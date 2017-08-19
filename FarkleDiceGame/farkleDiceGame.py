@@ -105,6 +105,7 @@ class GameStatistics:
 class Player:
     def __init__(self, game, name):
         self.name = name
+        self.kind = 0
         self.score = 0
         self.game = game
         self.turnScore = 0
@@ -137,6 +138,7 @@ class ComputerPlayer(Player):
         super().__init__(game, name)
         self.riskFactor = riskFactor
         self.bufferUnderWinScore = 100  # buffer in order not to get too close to Win score to optimize end game
+        self.kind = "computer"
 
     def wantToFollowUp(self, score, nbDices):
         if(self.score + score > FarkleDiceGame.WIN_SCORE - self.bufferUnderWinScore):
@@ -264,6 +266,7 @@ class HumanPlayer(Player):
         super().__init__(game, name)
         self.decideNextMoveUI = decideNextMoveUI
         self.wantToFollowUpUI = wantToFollowUpUI
+        self.kind = "human"
 
     def wantToFollowUp(self, score, nbDices):
         # returns True/False
@@ -377,7 +380,7 @@ class FarkleDiceGame:
                         selectionValid = self.validPlayerDiceSelection(
                             diceRoll, diceKept, keepPlaying)
                         if (selectionValid is not True):
-                            self.updateUI(self, selectionValid)
+                            self.updateUI(self, selectionValid, self.currentPlayer)
                     (_, turnScore) = FarkleDiceGame.evaluateDices(diceKept)
                     nbDicesToThrow -= len(diceKept)
                     if(nbDicesToThrow <= 0):
@@ -393,10 +396,17 @@ class FarkleDiceGame:
                                       self.currentPlayer, diceRoll, diceKept)
                         turnOver = True
                     elif (not keepPlaying):
-                        scoreForPossibleFollowUp = self.players[self.currentPlayer].turnScore
-                        self.players[self.currentPlayer].endTurn(True, diceRoll)
-                        self.updateUI(self, "endTurnScores",
-                                      self.currentPlayer, diceRoll, diceKept)
+                        if(self.players[self.currentPlayer].hasStarted or self.players[self.currentPlayer].turnScore >= FarkleDiceGame.START_SCORE):
+                            scoreForPossibleFollowUp = self.players[self.currentPlayer].turnScore
+                            self.players[self.currentPlayer].endTurn(True, diceRoll)
+                            self.updateUI(self, "endTurnScores",
+                                          self.currentPlayer, diceRoll, diceKept)
+                        else:
+                            scoreForPossibleFollowUp = 0  # No turn follow-up
+                            self.players[self.currentPlayer].endTurn(False, diceRoll)
+                            self.updateUI(self, "endTurnNoScore",
+                                          self.currentPlayer, diceRoll, diceKept)
+
                         turnOver = True
             if (self.players[self.currentPlayer].score == FarkleDiceGame.WIN_SCORE):
                 self.updateUI(self, "gameOver", self.currentPlayer)
