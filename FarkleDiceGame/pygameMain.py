@@ -12,11 +12,9 @@ from pygameUI import *
 def playGame():
     UI = FarklePygameUI()
     game = FarkleDiceGame(UI.updatePygameUI)
-    # game.addPlayer("Margot", "human")
-    # game.addPlayer("Louis", "human")
-    # game.addPlayer("Olivier", "human")
-    game.addComputerPlayer("Ordi 1.0")
-    # game.addComputerPlayer("Ordi 0.9", 0.9)
+    game.addComputerPlayer("Computer")
+    game.addComputerPlayer("Cautious Computer", 0.7)
+    game.addComputerPlayer("Risk Computer", 1.3)
     game.addHumanPlayer("Olivier", UI.decideNextMoveUI, UI.wantToFollowUpUI)
     game.play()
 
@@ -24,7 +22,8 @@ def playGame():
 class FarklePygameUI:
     def __init__(self):
         pygame.init()
-        self.screen = pygame.display.set_mode((1000, 600))
+        self.screen = pygame.display.set_mode((660, 240))
+        pygame.display.set_caption('Farkle Dice Game')
         self.clock = pygame.time.Clock()
         self.diceRollAnimationEvent = 0
         self.diceKeptUpdateEvent = pygame.USEREVENT + 1
@@ -45,17 +44,17 @@ class FarklePygameUI:
         self.UIObjects = []
 
         self.infoBox = MsgBoxUI("", pygame.Color('black'), pygame.Color(
-            'white'), 480, 30, 16, (10, 10), self.screen)
+            'white'), 400, 30, 16, (10, 10), self.screen)
         self.UIObjects.append(self.infoBox)
 
         self.endAnimationMsg = ""
         self.endAnimationSound = False
         self.turnInfoBox = MsgBoxUI("", pygame.Color('black'), pygame.Color(
-            'white'), 480, 30, 16, (10, 50), self.screen)
+            'white'), 400, 30, 16, (10, 50), self.screen)
         self.UIObjects.append(self.turnInfoBox)
 
         self.scoreBox = MsgBoxUI("", pygame.Color('black'), pygame.Color(
-            'white'), 150, 70, 16, (500, 10), self.screen)
+            'white'), 230, 140, 16, (420, 10), self.screen)
         self.UIObjects.append(self.scoreBox)
 
         self.dicesColor = (240, 240, 240)
@@ -67,7 +66,7 @@ class FarklePygameUI:
         self.dicesKept = []
         self.diceKeptAnimationStep = 0
         self.dicesKeptAnimation = []
-        self.turnDiceKeptUI = DiceRollUI([], 10, 30, (10, 160), self.screen)
+        self.turnDiceKeptUI = DiceRollUI([], 5, 30, (10, 160), self.screen)
         self.UIObjects.append(self.turnDiceKeptUI)
 
         self.buttonContinue = ButtonUI("Continue", pygame.Color(
@@ -85,6 +84,7 @@ class FarklePygameUI:
         self.goodSound = pygame.mixer.Sound(os.path.join("data", "345299__scrampunk__okay.wav"))
         self.diceSound = pygame.mixer.Sound(os.path.join("data", "276534__kwahmah-02__cokecan17.wav"))
         self.wrongSelectionSound = pygame.mixer.Sound(os.path.join("data", "142608__autistic-lucario__error.wav"))
+        self.winSound = pygame.mixer.Sound(os.path.join("data", "253177__suntemple__retro-accomplished-sfx.wav"))
 
     def startDiceAnimation(self, msg, sound=False, selectable=False):
         self.diceRollUI.update(self.diceRoll, self.dicesColor, selectable, self.animationTime)
@@ -149,11 +149,11 @@ class FarklePygameUI:
         msg = ""
         playersByScore = sorted(game.players, key=lambda x: x.score, reverse=True)
         for player in playersByScore:
-            msg += player.name + "    " + str(player.score) + "\n"
+            msg += player.name + " : " + str(player.score) + "\n"
         self.scoreBox.update(msg)
 
         # update info box
-        msg = "Turn # " + str(game.turn) + " " + game.players[currentPlayer].name
+        msg = "Turn # " + str(game.turn) + " - " + game.players[currentPlayer].name
         self.infoBox.update(msg)
 
         done = False
@@ -192,6 +192,7 @@ class FarklePygameUI:
             self.stopDiceAnimation()
             msg = "Game over : " + game.players[currentPlayer].name + " wins !"
             self.turnInfoBox.update(msg)
+            self.winSound.play()
         elif(gameEvent in ["mustKeepAllScoringDicesToStop"]):
             self.stopDiceAnimation()
             self.turnInfoBox.update("You must keep all scoring dices to end turn.")

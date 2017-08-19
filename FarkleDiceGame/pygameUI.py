@@ -122,7 +122,7 @@ class MsgBoxUI(UIObject):
         self.backgroundColor = color
         self.backgroundHoverColor = color
         self.borderColor = darken(color)
-        self.borderHoverColor = highlight(self.borderColor)
+        self.borderHoverColor = self.borderColor
         self.borderThickness = 1
 
     def handleEvent(self, event):
@@ -155,8 +155,10 @@ class DiceUI(UIObject):
         self.selectable = selectable
         self.backgroundColor = color
         self.backgroundHoverColor = highlight(self.backgroundColor)
-        self.backgroundSelectedColor = (255, 255, 255)
-        self.borderColor = (100, 100, 100)
+        self.backgroundSelectedColor = color
+        # self.borderColor = (100, 100, 100)
+        self.borderColor = darken(color)
+        self.borderHoverColor = highlight(self.borderColor)
         self.borderSelectedColor = (50, 50, 255)
         self.dotColor = (0, 0, 0)
         self.selected = False
@@ -221,19 +223,30 @@ class DiceUI(UIObject):
     def draw(self):
         if(self.diceValue == 0):
             return  # draw nothing "empty dice"
+
+        # draw dice background and border
         rect = (self.position[0], self.position[1], self.size, self.size)
-        if (self.isMouseInside() and self.selectable):
+        if(self.selected):
+            if(self.isMouseInside()):
+                pygame.draw.rect(self.surface, self.backgroundHoverColor, pygame.Rect(rect))
+                pygame.draw.rect(self.surface, highlight(self.borderSelectedColor),
+                                 pygame.Rect(rect), self.borderSelectedThickness)
+
+            else:
+                pygame.draw.rect(self.surface, self.backgroundSelectedColor, pygame.Rect(rect))
+                pygame.draw.rect(self.surface, self.borderSelectedColor,
+                                 pygame.Rect(rect), self.borderSelectedThickness)
+        elif (self.isMouseInside() and self.selectable):
+            # mouse hover
             pygame.draw.rect(self.surface, self.backgroundHoverColor, pygame.Rect(rect))
-        elif (self.selected):
-            pygame.draw.rect(self.surface, self.backgroundSelectedColor, pygame.Rect(rect))
+            pygame.draw.rect(self.surface, self.borderHoverColor,
+                             pygame.Rect(rect), self.borderThickness)
         else:
             pygame.draw.rect(self.surface, self.backgroundColor, pygame.Rect(rect))
-        if (self.selected):
-            pygame.draw.rect(self.surface, self.borderSelectedColor,
-                             pygame.Rect(rect), self.borderSelectedThickness)
-        else:
             pygame.draw.rect(self.surface, self.borderColor,
                              pygame.Rect(rect), self.borderThickness)
+
+        # drow dice dots
         for dot in self.dotPosition[self.diceValue - 1]:
             if (self.dotSize >= 2):
                 pygame.draw.circle(self.surface, self.dotColor, (
@@ -241,6 +254,7 @@ class DiceUI(UIObject):
                     self.position[1] + dot[1]),
                     self.dotSize)
             else:
+                # small circles do not render correctly => use point instead
                 self.surface.fill(self.dotColor, (
                     (self.position[0] + dot[0] - 1,
                      self.position[1] + dot[1] - 1),

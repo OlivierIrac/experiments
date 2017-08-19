@@ -234,12 +234,15 @@ class ComputerPlayer(Player):
                 potentialScoreIfContinue = newMaxScore
             verbose("AI", scoreIfDoNotContinue, potentialScoreIfContinue,
                     self.riskFactor * potentialScoreIfContinue)
+
             if(self.riskFactor * potentialScoreIfContinue > scoreIfDoNotContinue and self.score + potentialScoreIfContinue < FarkleDiceGame.WIN_SCORE - self.game.gameStats.avgScoreForNbDices(6)):
                 # continue if potential score by throwing dices again > current score and
                 # does not exceed win score
                 verbose("AI", "AI decides to continue")
                 return (True, diceKept)
+
             else:
+                # check if reaching end of game
                 if(self.score + self.turnScore + diceScore > FarkleDiceGame.WIN_SCORE - self.bufferUnderWinScore):
                     # if score is above Win score - buffer, optimize end game
                     # keep only one 5 or one 1 if possible
@@ -247,14 +250,17 @@ class ComputerPlayer(Player):
                         # keep only one 1 if does not exceed win score - buffer
                         verbose("AI", "AI optimizing end game: decides to keep only [1]")
                         diceKept = [1]
+                        return (True, diceKept)
                     elif(diceKept.count(5) >= 1):
                         verbose("AI", "AI optimizing end game: decides to keep only [5]")
                         diceKept = [5]
+                        return (True, diceKept)
                     else:
                         # abort turn by selecting []
                         verbose("AI", "AI optimizing end game: decides to abort turn to keep win buffer")
                         diceKept = []
-                    return (True, diceKept)
+                        return (False, diceKept)
+
                 # decides to stop, reset diceKept to keep all dices
                 (diceKept, diceScore) = FarkleDiceGame.evaluateDices(diceRoll)
                 verbose("AI", "AI decides to score turn")
@@ -326,14 +332,18 @@ class FarkleDiceGame:
 
     def validPlayerDiceSelection(self, diceRoll, diceSelection, keepPlaying):
         if(not keepPlaying):
-            # Player decides to stop, dice selection must contain all scoring dices
+            # Player decides to stop, dice selection must contain all scoring dices or be empty
             (scoringDices, _) = FarkleDiceGame.evaluateDices(diceRoll)
-            if(sorted(diceSelection) == sorted(scoringDices)):
+            if(sorted(diceSelection) == sorted(scoringDices) or len(diceSelection) == 0):
                 return True
             else:
                 return "mustKeepAllScoringDicesToStop"
         else:
-            # Player want to continue, all dices from selection shall score
+            # Player want to continue
+            # Selection must not be empty
+            if(len(diceSelection) == 0):
+                return "invalidDiceSelection"
+            # else all dices from selection shall score
             (_, selectionScore) = FarkleDiceGame.evaluateDices(diceSelection)
             selectionValid = True
             for dice in diceSelection:
