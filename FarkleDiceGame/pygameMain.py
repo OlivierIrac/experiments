@@ -84,7 +84,7 @@ class FarklePygameUI:
         self.goodSound = pygame.mixer.Sound(os.path.join("data", "345299__scrampunk__okay.wav"))
         self.diceSound = pygame.mixer.Sound(os.path.join("data", "276534__kwahmah-02__cokecan17.wav"))
         self.wrongSelectionSound = pygame.mixer.Sound(os.path.join("data", "142608__autistic-lucario__error.wav"))
-        self.winSound = pygame.mixer.Sound(os.path.join("data", "253177__suntemple__retro-accomplished-sfx.wav"))
+        self.winSound = pygame.mixer.Sound(os.path.join("data", "341985__unadamlar__goodresult.wav"))
 
     def startDiceAnimation(self, msg, sound=False, selectable=False):
         self.diceRollUI.update(self.diceRoll, self.dicesColor, selectable, self.animationTime)
