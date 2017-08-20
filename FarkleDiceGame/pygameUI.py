@@ -282,6 +282,12 @@ class DiceRollUI(UIObject):
         self.__init__(diceRoll, self.gap, self.size, self.position,
                       self.surface, self.color, selectable, throwTime)
 
+    def remove(self, dice):
+        for diceUI in self.diceDraw:
+            if(diceUI.diceValue == dice):
+                diceUI.update(0)
+                return
+
     def startAnimation(self):
         if(len(self.diceRoll) != 0):
             self.animation = True

@@ -271,8 +271,7 @@ class FarklePygameUI:
                             self.endAnimationSound.play()
                     else:
                         # remove one by one, dices kept from dice roll
-                        self.diceRoll.remove(self.dicesKept[self.diceKeptAnimationStep])
-                        self.diceRollUI.update(self.diceRoll)
+                        self.diceRollUI.remove(self.dicesKept[self.diceKeptAnimationStep])
                         # add one by one, dices kept to turn dice kept
                         self.dicesKeptAnimation.append(self.dicesKept[self.diceKeptAnimationStep])
                         self.turnDiceKeptUI.update(self.dicesKeptAnimation)
