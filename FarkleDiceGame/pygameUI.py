@@ -262,25 +262,26 @@ class DiceUI(UIObject):
 
 
 class DiceRollUI(UIObject):
-    def __init__(self, diceRoll, gap, size, position, surface, color=pygame.Color('white'), selectable=False, throwTime=0):
+    def __init__(self, diceRoll, gap, size, position, surface, color=pygame.Color('white'), selectable=False):
         super().__init__(len(diceRoll) * (size + gap), size, position, surface)
         self.size = size
         self.diceDraw = []
         self.diceRoll = diceRoll
         self.gap = gap
         self.selectable = selectable
-        self.throwTime = throwTime
+        self.animationTime = 0
         self.animation = False
         self.animationEvent = pygame.USEREVENT
+        self.animationSound = 0
         self.nbDicesToDraw = len(diceRoll)
         self.color = color
         for n in range(0, len(diceRoll)):
             self.diceDraw.append(
                 DiceUI(diceRoll[n], size, (position[0] + n * (size + gap), position[1]), surface, color, self.selectable))
 
-    def update(self, diceRoll, color=pygame.Color('white'), selectable=False, throwTime=0):
+    def update(self, diceRoll, color=pygame.Color('white'), selectable=False):
         self.__init__(diceRoll, self.gap, self.size, self.position,
-                      self.surface, self.color, selectable, throwTime)
+                      self.surface, self.color, selectable)
 
     def remove(self, dice):
         for diceUI in self.diceDraw:
@@ -288,16 +289,18 @@ class DiceRollUI(UIObject):
                 diceUI.update(0)
                 return
 
-    def startAnimation(self):
+    def startAnimation(self, sound, time):
         if(len(self.diceRoll) != 0):
+            self.animationSound = sound
+            self.animationTime = time
             self.animation = True
-            pygame.time.set_timer(self.animationEvent, self.throwTime)
+            pygame.time.set_timer(self.animationEvent, self.animationTime)
             self.nbDicesToDraw = 0
-            return self.animationEvent
 
     def updateAnimation(self):
         if(self.animation):
-            pygame.time.set_timer(self.animationEvent, self.throwTime)
+            self.animationSound.play()
+            pygame.time.set_timer(self.animationEvent, self.animationTime)
             self.nbDicesToDraw += 1
             if(self.nbDicesToDraw == len(self.diceRoll)):
                 self.stopAnimation()
@@ -318,6 +321,10 @@ class DiceRollUI(UIObject):
                 self.diceDraw[n].draw()
 
     def handleEvent(self, event):
+        # update animation on timer expiration
+        if(event.type == self.animationEvent):
+            self.updateAnimation()
+        # pass event down to sub UI components
         for dice in self.diceDraw:
             dice.handleEvent(event)
 

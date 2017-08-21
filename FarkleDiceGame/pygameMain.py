@@ -25,7 +25,6 @@ class FarklePygameUI:
         self.screen = pygame.display.set_mode((660, 240))
         pygame.display.set_caption('Farkle Dice Game')
         self.clock = pygame.time.Clock()
-        self.diceRollAnimationEvent = 0
         self.diceKeptUpdateEvent = pygame.USEREVENT + 1
         self.animationTime = 300
         self.thinkTime = 400  # Animation pause time after dice roll for computer to "think"
@@ -59,14 +58,14 @@ class FarklePygameUI:
 
         self.dicesColor = (240, 240, 240)
         self.diceRollUI = DiceRollUI([], 10, 50, (10, 100), self.screen,
-                                     self.dicesColor, False, self.animationTime)
+                                     self.dicesColor, False)
         self.UIObjects.append(self.diceRollUI)
 
         self.turnDiceKept = []
         self.dicesKept = []
         self.diceKeptAnimationStep = 0
         self.dicesKeptAnimation = []
-        self.turnDiceKeptUI = DiceRollUI([], 5, 30, (10, 160), self.screen)
+        self.turnDiceKeptUI = DiceRollUI([], 5, 30, (10, 160), self.screen, self.dicesColor, False)
         self.UIObjects.append(self.turnDiceKeptUI)
 
         self.buttonContinue = ButtonUI("Continue", pygame.Color(
@@ -79,16 +78,21 @@ class FarklePygameUI:
         self.buttonStop.hide()
 
         # load sounds
-        self.keepDiceSound = pygame.mixer.Sound(os.path.join("data", "334764__dneproman__ma-sfx-8bit-tech-gui-9.wav"))
-        self.badSound = pygame.mixer.Sound(os.path.join("data", "242503__gabrielaraujo__failure-wrong-action.wav"))
+        self.keepDiceSound = pygame.mixer.Sound(os.path.join(
+            "data", "334764__dneproman__ma-sfx-8bit-tech-gui-9.wav"))
+        self.badSound = pygame.mixer.Sound(os.path.join(
+            "data", "242503__gabrielaraujo__failure-wrong-action.wav"))
         self.goodSound = pygame.mixer.Sound(os.path.join("data", "345299__scrampunk__okay.wav"))
-        self.diceSound = pygame.mixer.Sound(os.path.join("data", "276534__kwahmah-02__cokecan17.wav"))
-        self.wrongSelectionSound = pygame.mixer.Sound(os.path.join("data", "142608__autistic-lucario__error.wav"))
-        self.winSound = pygame.mixer.Sound(os.path.join("data", "341985__unadamlar__goodresult.wav"))
+        self.diceSound = pygame.mixer.Sound(os.path.join(
+            "data", "276534__kwahmah-02__cokecan17.wav"))
+        self.wrongSelectionSound = pygame.mixer.Sound(
+            os.path.join("data", "142608__autistic-lucario__error.wav"))
+        self.winSound = pygame.mixer.Sound(os.path.join(
+            "data", "341985__unadamlar__goodresult.wav"))
 
     def startDiceAnimation(self, msg, sound=False, selectable=False):
-        self.diceRollUI.update(self.diceRoll, self.dicesColor, selectable, self.animationTime)
-        self.diceRollAnimationEvent = self.diceRollUI.startAnimation()
+        self.diceRollUI.update(self.diceRoll, self.dicesColor, selectable)
+        self.diceRollUI.startAnimation(self.diceSound, self.animationTime)
         self.diceKeptAnimationStep = 0
         self.dicesKeptAnimation = list(self.turnDiceKept)
         self.diceAnimationRunning = True
@@ -100,7 +104,7 @@ class FarklePygameUI:
 
     def completeDiceAnimation(self):
         # fast forward all on-going animations
-        self.diceRollAnimationEvent = self.diceRollUI.stopAnimation()
+        self.diceRollUI.stopAnimation()
         for n in range(self.diceKeptAnimationStep, len(self.dicesKept)):
             self.diceRoll.remove(self.dicesKept[n])
         self.diceRollUI.update(self.diceRoll)
@@ -110,9 +114,31 @@ class FarklePygameUI:
 
     def stopDiceAnimation(self):
         # stop all on-going animations
-        self.diceRollAnimationEvent = self.diceRollUI.stopAnimation()
+        self.diceRollUI.stopAnimation()
         pygame.time.set_timer(self.diceKeptUpdateEvent, 0)
         self.diceAnimationRunning = False
+
+    def updateDiceAnimation(self):
+        # Animate dice kept
+        if(self.diceAnimationRunning):
+            if (self.diceKeptAnimationStep >= len(self.dicesKept)):
+                # reached the end of animation
+                self.turnInfoBox.update(self.endAnimationMsg)
+                self.turnDiceKept = list(
+                    self.game.players[self.currentPlayer].turnDicesKept)
+                self.turnDiceKeptUI.update(self.turnDiceKept)
+                self.stopDiceAnimation()
+                if(self.endAnimationSound):
+                    self.endAnimationSound.play()
+            else:
+                # remove one by one, dices kept from dice roll
+                self.diceRollUI.remove(self.dicesKept[self.diceKeptAnimationStep])
+                # add one by one, dices kept to turn dice kept
+                self.dicesKeptAnimation.append(self.dicesKept[self.diceKeptAnimationStep])
+                self.turnDiceKeptUI.update(self.dicesKeptAnimation)
+                pygame.time.set_timer(self.diceKeptUpdateEvent, self.animationTime)
+                self.keepDiceSound.play()
+                self.diceKeptAnimationStep += 1
 
     def decideNextMoveUI(self, diceRoll):
         # UI for human player dice selection and stop/continue
@@ -120,7 +146,8 @@ class FarklePygameUI:
         self.dicesKept = []
         if(self.previousUserSelectionValid):
             # animate dice roll
-            msg = "Select dices. Turn score : " + str(self.game.players[self.currentPlayer].turnScore)
+            msg = "Select dices. Turn score : " + \
+                str(self.game.players[self.currentPlayer].turnScore)
             self.startDiceAnimation(msg, 0, True)
         # else keep current dice roll and wait new selection
         self.buttonStop.show()
@@ -226,15 +253,17 @@ class FarklePygameUI:
                 UIObject.draw()
             pygame.display.flip()
 
-            # process mouse and keyboards events
+            # process pygame events
             event = pygame.event.poll()
             for UIObject in self.UIObjects:
                 objectEvent = UIObject.handleEvent(event)
                 if(objectEvent):
                     if(objectEvent == "buttonPressed"):
                         if(self.diceAnimationRunning):
+                            # if animation is running, first press on button completes animation
                             self.completeDiceAnimation()
                         else:
+                            # handle user input
                             self.dicesKept = self.diceRollUI.getDiceSelection()
                             if(UIObject == self.buttonContinue):
                                 self.keepPlaying = True
@@ -252,32 +281,8 @@ class FarklePygameUI:
                 else:
                     done = True
 
-            # process animation timer events
-            if(event.type == self.diceRollAnimationEvent):
-                # Animate dice roll throw
-                self.diceSound.play()
-                self.diceRollUI.updateAnimation()
-
             if(event.type == self.diceKeptUpdateEvent):
-                # Animate dice kept
-                if(self.diceAnimationRunning):
-                    if (self.diceKeptAnimationStep >= len(self.dicesKept)):
-                        # reached the end of animation
-                        self.turnInfoBox.update(self.endAnimationMsg)
-                        self.turnDiceKept = list(self.game.players[self.currentPlayer].turnDicesKept)
-                        self.turnDiceKeptUI.update(self.turnDiceKept)
-                        self.stopDiceAnimation()
-                        if(self.endAnimationSound):
-                            self.endAnimationSound.play()
-                    else:
-                        # remove one by one, dices kept from dice roll
-                        self.diceRollUI.remove(self.dicesKept[self.diceKeptAnimationStep])
-                        # add one by one, dices kept to turn dice kept
-                        self.dicesKeptAnimation.append(self.dicesKept[self.diceKeptAnimationStep])
-                        self.turnDiceKeptUI.update(self.dicesKeptAnimation)
-                        pygame.time.set_timer(self.diceKeptUpdateEvent, self.animationTime)
-                        self.keepDiceSound.play()
-                        self.diceKeptAnimationStep += 1
+                self.updateDiceAnimation()
 
 
 playGame()
