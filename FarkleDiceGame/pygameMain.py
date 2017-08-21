@@ -96,8 +96,9 @@ class FarklePygameUI:
         self.diceKeptAnimationStep = 0
         self.dicesKeptAnimation = list(self.turnDiceKept)
         self.diceAnimationRunning = True
+        # FIXME: start diceKept animation when dice roll animation ends
         pygame.time.set_timer(self.diceKeptUpdateEvent,
-                              self.animationTime * len(self.diceRoll) + self.thinkTime)
+                              self.animationTime * 2 * len(self.diceRoll) + self.thinkTime)
         self.endAnimationMsg = msg
         self.endAnimationSound = sound
         self.turnInfoBox.update("Rolling dices...")
