@@ -269,19 +269,29 @@ class DiceRollUI(UIObject):
         self.diceRoll = diceRoll
         self.gap = gap
         self.selectable = selectable
+
+        # TODO: create timer class to allocate unique timer value
+        # for animation displaying dice one by one
         self.animationTime = 0
         self.animation = False
         self.animationEvent = pygame.USEREVENT
-        self.animationSound = 0
         self.nbDicesToDraw = len(diceRoll)
+        self.animationSound = 0
+
+        # for animation displaying random dice values until dice settles
+        self.randomDiceAnimationTime = 80
+        self.randomDiceAnimation = False
+        self.randomDiceEvent = pygame.USEREVENT + 2
+        self.backupDiceValue = 0
+        self.backupDice = 0
+
         self.color = color
         for n in range(0, len(diceRoll)):
             self.diceDraw.append(
                 DiceUI(diceRoll[n], size, (position[0] + n * (size + gap), position[1]), surface, color, self.selectable))
 
-    def update(self, diceRoll, color=pygame.Color('white'), selectable=False):
-        self.__init__(diceRoll, self.gap, self.size, self.position,
-                      self.surface, self.color, selectable)
+    def update(self, diceRoll):
+        self.__init__(diceRoll, self.gap, self.size, self.position, self.surface)
 
     def remove(self, dice):
         for diceUI in self.diceDraw:
@@ -299,19 +309,22 @@ class DiceRollUI(UIObject):
 
     def updateAnimation(self):
         if(self.animation):
-            self.animationSound.play()
-            # increase animation time for last 2 dices to give more suspense
-            # TODO: animate random dice during this extra wait time
-            if(len(self.diceRoll) - self.nbDicesToDraw <= 3):
-                self.animationTime *= random.randint(1, 3)
-            pygame.time.set_timer(self.animationEvent, self.animationTime)
-            self.nbDicesToDraw += 1
             if(self.nbDicesToDraw == len(self.diceRoll)):
                 self.stopAnimation()
-        return self.animation
+                return "diceRollAnimationCompleted"
+            self.animationSound.play()
+            # increase animation time for last 2 dices to give more suspense
+            if(len(self.diceRoll) - self.nbDicesToDraw <= 3):
+                self.animationTime = int(self.animationTime * random.uniform(1.5, 3))
+            pygame.time.set_timer(self.animationEvent, self.animationTime)
+            self.stopRandomizeDice()
+            self.nbDicesToDraw += 1
+            self.startRandomizeDice(self.nbDicesToDraw - 1)
+        return False
 
     def stopAnimation(self):
         self.animation = False
+        self.stopRandomizeDice()
         pygame.time.set_timer(self.animationEvent, 0)
         self.nbDicesToDraw = len(self.diceRoll)
         for dice in self.diceDraw:
@@ -319,6 +332,25 @@ class DiceRollUI(UIObject):
 
     def isAnimationComplete(self):
         return(not self.animation)
+
+    def startRandomizeDice(self, dice):
+        self.backupDiceValue = self.diceDraw[dice].diceValue
+        self.backupDice = dice
+        self.diceDraw[self.backupDice].diceValue = random.choice([1, 2, 3, 4, 5, 6])
+        pygame.time.set_timer(self.randomDiceEvent, self.randomDiceAnimationTime)
+        self.randomDiceAnimation = True
+
+    def stopRandomizeDice(self):
+        if(self.randomDiceAnimation):
+            self.diceDraw[self.backupDice].diceValue = self.backupDiceValue
+            pygame.time.set_timer(self.randomDiceEvent, 0)
+            self.randomDiceAnimation = False
+
+    def updateRandomizeDice(self):
+        if(self.randomDiceAnimation):
+            self.animationSound.play()
+            self.diceDraw[self.backupDice].diceValue = random.choice([1, 2, 3, 4, 5, 6])
+            pygame.time.set_timer(self.randomDiceEvent, self.randomDiceAnimationTime)
 
     def draw(self):
         if(self.nbDicesToDraw != 0):
@@ -328,7 +360,9 @@ class DiceRollUI(UIObject):
     def handleEvent(self, event):
         # update animation on timer expiration
         if(event.type == self.animationEvent):
-            self.updateAnimation()
+            return(self.updateAnimation())
+        elif(event.type == self.randomDiceEvent):
+            self.updateRandomizeDice()
         # pass event down to sub UI components
         for dice in self.diceDraw:
             dice.handleEvent(event)

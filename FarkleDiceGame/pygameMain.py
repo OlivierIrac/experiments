@@ -26,8 +26,8 @@ class FarklePygameUI:
         pygame.display.set_caption('Farkle Dice Game')
         self.clock = pygame.time.Clock()
         self.diceKeptUpdateEvent = pygame.USEREVENT + 1
-        self.animationTime = 300
-        self.thinkTime = 400  # Animation pause time after dice roll for computer to "think"
+        self.animationTime = 250
+        self.thinkTime = 500  # Animation pause time after dice roll for computer to "think"
         self.diceRoll = []
         self.game = 0
         self.currentPlayer = 0
@@ -91,14 +91,14 @@ class FarklePygameUI:
             "data", "341985__unadamlar__goodresult.wav"))
 
     def startDiceAnimation(self, msg, sound=False, selectable=False):
-        self.diceRollUI.update(self.diceRoll, self.dicesColor, selectable)
+        self.diceRollUI.update(self.diceRoll)
+        # FIXME: selectable method to update all sub dices
+        self.diceRollUI.selectable = selectable
         self.diceRollUI.startAnimation(self.diceSound, self.animationTime)
         self.diceKeptAnimationStep = 0
         self.dicesKeptAnimation = list(self.turnDiceKept)
         self.diceAnimationRunning = True
-        # FIXME: start diceKept animation when dice roll animation ends
-        pygame.time.set_timer(self.diceKeptUpdateEvent,
-                              self.animationTime * 2 * len(self.diceRoll) + self.thinkTime)
+
         self.endAnimationMsg = msg
         self.endAnimationSound = sound
         self.turnInfoBox.update("Rolling dices...")
@@ -110,8 +110,7 @@ class FarklePygameUI:
             self.diceRoll.remove(self.dicesKept[n])
         self.diceRollUI.update(self.diceRoll)
         self.diceKeptAnimationStep = len(self.dicesKept)
-        # set short timer to manage end of animation update
-        pygame.time.set_timer(self.diceKeptUpdateEvent, 1)
+        self.updateDiceAnimation()
 
     def stopDiceAnimation(self):
         # stop all on-going animations
@@ -127,8 +126,8 @@ class FarklePygameUI:
                 self.turnInfoBox.update(self.endAnimationMsg)
                 self.turnDiceKept = list(
                     self.game.players[self.currentPlayer].turnDicesKept)
-                self.turnDiceKeptUI.update(self.turnDiceKept)
                 self.stopDiceAnimation()
+                self.turnDiceKeptUI.update(self.turnDiceKept)
                 if(self.endAnimationSound):
                     self.endAnimationSound.play()
             else:
@@ -271,6 +270,10 @@ class FarklePygameUI:
                             elif(UIObject == self.buttonStop):
                                 self.keepPlaying = False
                             done = True
+                    elif(objectEvent == "diceRollAnimationCompleted"):
+                        # dice roll animation completed, start dice Kept animation
+                        pygame.time.set_timer(self.diceKeptUpdateEvent, self.thinkTime)
+                        self.turnInfoBox.update("Thinking...")
 
             if(event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE)):
                 pygame.quit()
