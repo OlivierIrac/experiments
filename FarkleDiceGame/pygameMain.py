@@ -92,8 +92,7 @@ class FarklePygameUI:
 
     def startDiceAnimation(self, msg, sound=False, selectable=False):
         self.diceRollUI.update(self.diceRoll)
-        # FIXME: selectable method to update all sub dices
-        self.diceRollUI.selectable = selectable
+        self.diceRollUI.setSelectable(selectable)
         self.diceRollUI.startAnimation(self.diceSound, self.animationTime)
         self.diceKeptAnimationStep = 0
         self.dicesKeptAnimation = list(self.turnDiceKept)
@@ -105,12 +104,13 @@ class FarklePygameUI:
 
     def completeDiceAnimation(self):
         # fast forward all on-going animations
-        self.diceRollUI.stopAnimation()
-        for n in range(self.diceKeptAnimationStep, len(self.dicesKept)):
-            self.diceRoll.remove(self.dicesKept[n])
-        self.diceRollUI.update(self.diceRoll)
         self.diceKeptAnimationStep = len(self.dicesKept)
         self.updateDiceAnimation()
+        self.diceRollUI.stopAnimation()
+        if(len(self.dicesKept) > 0):
+            for n in range(self.diceKeptAnimationStep, len(self.dicesKept)):
+                self.diceRoll.remove(self.dicesKept[n])
+        self.diceRollUI.update(self.diceRoll)
 
     def stopDiceAnimation(self):
         # stop all on-going animations
@@ -119,6 +119,7 @@ class FarklePygameUI:
         self.diceAnimationRunning = False
 
     def updateDiceAnimation(self):
+        print("updateDiceAnimation")
         # Animate dice kept
         if(self.diceAnimationRunning):
             if (self.diceKeptAnimationStep >= len(self.dicesKept)):
