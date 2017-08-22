@@ -272,8 +272,11 @@ class FarklePygameUI:
                             done = True
                     elif(objectEvent == "diceRollAnimationCompleted"):
                         # dice roll animation completed, start dice Kept animation
-                        pygame.time.set_timer(self.diceKeptUpdateEvent, self.thinkTime)
-                        self.turnInfoBox.update("Thinking...")
+                        if(len(self.dicesKept) != 0):
+                            pygame.time.set_timer(self.diceKeptUpdateEvent, self.thinkTime)
+                            self.turnInfoBox.update("Thinking...")
+                        else:
+                            self.completeDiceAnimation()
 
             if(event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE)):
                 pygame.quit()

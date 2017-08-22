@@ -326,7 +326,7 @@ class DiceRollUI(UIObject):
             self.animationSound.play()
             # increase animation time for last 2 dices to give more suspense
             if(len(self.diceRoll) - self.nbDicesToDraw <= 3):
-                self.animationTime = int(self.animationTime * random.uniform(1.5, 3))
+                self.animationTime = int(self.animationTime * random.uniform(1, 2))
             pygame.time.set_timer(self.animationEvent, self.animationTime)
             self.stopRandomizeDice()
             self.nbDicesToDraw += 1
