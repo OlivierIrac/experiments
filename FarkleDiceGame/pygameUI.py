@@ -170,7 +170,6 @@ class DiceUI(UIObject):
         self.bottomRightMargin = self.size - self.topLeftMargin
 
     def setSelectable(self, selectable):
-        print("dice selectable", selectable)
         self.selectable = selectable
 
     def setDiceValue(self, diceValue):
@@ -297,12 +296,8 @@ class DiceRollUI(UIObject):
                 DiceUI(self.diceRoll[n], self.size, (self.position[0] + n * (self.size + self.gap), self.position[1]), self.surface, self.color, self.selectable))
 
     def update(self, diceRoll):
-        self.diceRoll.clear()
-        self.diceRoll = diceRoll
-        self.diceDraw.clear()
-        for n in range(0, len(self.diceRoll)):
-            self.diceDraw.append(
-                DiceUI(self.diceRoll[n], self.size, (self.position[0] + n * (self.size + self.gap), self.position[1]), self.surface, self.color, self.selectable))
+        self.__init__(diceRoll, self.gap, self.size, self.position,
+                      self.surface, self.color, self.selectable)
 
     def remove(self, dice):
         for diceUI in self.diceDraw:
@@ -311,7 +306,6 @@ class DiceRollUI(UIObject):
                 return
 
     def setSelectable(self, selectable):
-        print("DiceRoll set selectable", selectable)
         self.selectable = selectable
         for n in range(0, len(self.diceRoll)):
             self.diceDraw[n].setSelectable(self.selectable)

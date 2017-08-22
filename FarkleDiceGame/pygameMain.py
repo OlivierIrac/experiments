@@ -119,7 +119,6 @@ class FarklePygameUI:
         self.diceAnimationRunning = False
 
     def updateDiceAnimation(self):
-        print("updateDiceAnimation")
         # Animate dice kept
         if(self.diceAnimationRunning):
             if (self.diceKeptAnimationStep >= len(self.dicesKept)):
