@@ -26,8 +26,8 @@ class FarklePygameUI:
         pygame.display.set_caption('Farkle Dice Game')
         self.clock = pygame.time.Clock()
         self.diceKeptUpdateEvent = pygame.USEREVENT + 1
-        self.animationTime = 250
-        self.thinkTime = 500  # Animation pause time after dice roll for computer to "think"
+        self.animationTime = 200
+        self.thinkTime = 1500  # Animation pause time after dice roll for computer to "think"
         self.diceRoll = []
         self.game = 0
         self.currentPlayer = 0
@@ -104,13 +104,14 @@ class FarklePygameUI:
 
     def completeDiceAnimation(self):
         # fast forward all on-going animations
-        self.diceKeptAnimationStep = len(self.dicesKept)
-        self.updateDiceAnimation()
-        self.diceRollUI.stopAnimation()
         if(len(self.dicesKept) > 0):
             for n in range(self.diceKeptAnimationStep, len(self.dicesKept)):
                 self.diceRoll.remove(self.dicesKept[n])
         self.diceRollUI.update(self.diceRoll)
+
+        self.diceKeptAnimationStep = len(self.dicesKept)
+        self.updateDiceAnimation()
+        self.diceRollUI.stopAnimation()
 
     def stopDiceAnimation(self):
         # stop all on-going animations

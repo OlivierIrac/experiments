@@ -325,8 +325,8 @@ class DiceRollUI(UIObject):
                 return "diceRollAnimationCompleted"
             self.animationSound.play()
             # increase animation time for last 2 dices to give more suspense
-            if(len(self.diceRoll) - self.nbDicesToDraw <= 3):
-                self.animationTime = int(self.animationTime * random.uniform(1, 2))
+            if(len(self.diceRoll) - self.nbDicesToDraw <= 2):
+                self.animationTime = int(self.animationTime * random.uniform(1.5, 2.5))
             pygame.time.set_timer(self.animationEvent, self.animationTime)
             self.stopRandomizeDice()
             self.nbDicesToDraw += 1
@@ -338,9 +338,6 @@ class DiceRollUI(UIObject):
         self.stopRandomizeDice()
         pygame.time.set_timer(self.animationEvent, 0)
         self.nbDicesToDraw = len(self.diceRoll)
-
-    def isAnimationComplete(self):
-        return(not self.animation)
 
     def startRandomizeDice(self, dice):
         self.backupDiceValue = self.diceDraw[dice].getDiceValue()
@@ -365,6 +362,9 @@ class DiceRollUI(UIObject):
         if(self.nbDicesToDraw != 0):
             for n in range(0, self.nbDicesToDraw):
                 self.diceDraw[n].draw()
+
+    def isAnimationComplete(self):
+        return(not self.animation)
 
     def handleEvent(self, event):
         # update animation on timer expiration
