@@ -16,6 +16,7 @@ def playGame():
     game.addComputerPlayer("Cautious Computer", 0.7)
     game.addComputerPlayer("Risk Computer", 1.3)
     game.addHumanPlayer("Olivier", UI.decideNextMoveUI, UI.wantToFollowUpUI)
+    game.addHumanPlayer("Louis", UI.decideNextMoveUI, UI.wantToFollowUpUI)
     game.play()
 
 
@@ -25,7 +26,9 @@ class FarklePygameUI:
         self.screen = pygame.display.set_mode((660, 240))
         pygame.display.set_caption('Farkle Dice Game')
         self.clock = pygame.time.Clock()
-        self.diceKeptUpdateEvent = pygame.USEREVENT + 1
+        self.diceKeptUpdateEvent = pygame.USEREVENT + 5
+        self.autoAdvanceEvent = pygame.USEREVENT + 6
+        self.autoAdvanceTime = 5000
         self.animationTime = 200
         self.thinkTime = 1500  # Animation pause time after dice roll for computer to "think"
         self.diceRoll = []
@@ -184,6 +187,12 @@ class FarklePygameUI:
         msg = "Turn # " + str(game.turn) + " - " + game.players[currentPlayer].name
         self.infoBox.update(msg)
 
+        # set auto advance timer in case computer is playing
+        if(game.players[currentPlayer].kind == "computer"):
+            pygame.time.set_timer(self.autoAdvanceEvent, self.autoAdvanceTime)
+        else:
+            pygame.time.set_timer(self.autoAdvanceEvent, 0)
+
         done = False
         # process Farkle Game events
         # updates infoBox, diceroll, dicekept UI elements, starts animations
@@ -289,8 +298,12 @@ class FarklePygameUI:
                 else:
                     done = True
 
+            # handle timers
             if(event.type == self.diceKeptUpdateEvent):
                 self.updateDiceAnimation()
+
+            if(event.type == self.autoAdvanceEvent):
+                done = True
 
 
 playGame()
