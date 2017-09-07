@@ -168,37 +168,15 @@ class DiceUI(UIObject):
         self.topLeftMargin = int(self.size / 4)
         self.center = int(self.size / 2)
         self.bottomRightMargin = self.size - self.topLeftMargin
-        self.dotPosition = [
-            [
-                (self.center, self.center)  # 1
-            ],
-            [
-                (self.topLeftMargin, self.topLeftMargin), (self.bottomRightMargin, self.bottomRightMargin)  # 2
-            ],
-            [
-                (self.topLeftMargin, self.topLeftMargin), (self.center, self.center),
-                (self.bottomRightMargin, self.bottomRightMargin)  # 3
-            ],
-            [
-                (self.topLeftMargin, self.topLeftMargin), (self.bottomRightMargin, self.bottomRightMargin),
-                (self.topLeftMargin, self.bottomRightMargin), (self.bottomRightMargin, self.topLeftMargin)  # 4
-            ],
-            [
-                (self.topLeftMargin, self.topLeftMargin), (self.bottomRightMargin, self.bottomRightMargin),
-                (self.center, self.center),
-                (self.topLeftMargin, self.bottomRightMargin), (self.bottomRightMargin, self.topLeftMargin)  # 5
-            ],
-            [
-                (self.topLeftMargin, self.topLeftMargin), (self.bottomRightMargin, self.bottomRightMargin),
-                (self.topLeftMargin, self.bottomRightMargin), (self.bottomRightMargin, self.topLeftMargin),
-                (self.center, self.topLeftMargin), (self.center, self.bottomRightMargin)  # 6
-            ]
-        ]
 
-    def update(self, diceValue, color=pygame.Color('white'), selectable=False):
-        self.backgroundColor = color
-        self.diceValue = diceValue
+    def setSelectable(self, selectable):
         self.selectable = selectable
+
+    def setDiceValue(self, diceValue):
+        self.diceValue = diceValue
+
+    def getDiceValue(self):
+        return self.diceValue
 
     def setColor(self, color=pygame.Color('white')):
         self.backgroundColor = color
@@ -247,7 +225,34 @@ class DiceUI(UIObject):
                              pygame.Rect(rect), self.borderThickness)
 
         # drow dice dots
-        for dot in self.dotPosition[self.diceValue - 1]:
+        dotPosition = [
+            [
+                (self.center, self.center)  # 1
+            ],
+            [
+                (self.topLeftMargin, self.topLeftMargin), (self.bottomRightMargin, self.bottomRightMargin)  # 2
+            ],
+            [
+                (self.topLeftMargin, self.topLeftMargin), (self.center, self.center),
+                (self.bottomRightMargin, self.bottomRightMargin)  # 3
+            ],
+            [
+                (self.topLeftMargin, self.topLeftMargin), (self.bottomRightMargin, self.bottomRightMargin),
+                (self.topLeftMargin, self.bottomRightMargin), (self.bottomRightMargin, self.topLeftMargin)  # 4
+            ],
+            [
+                (self.topLeftMargin, self.topLeftMargin), (self.bottomRightMargin, self.bottomRightMargin),
+                (self.center, self.center),
+                (self.topLeftMargin, self.bottomRightMargin), (self.bottomRightMargin, self.topLeftMargin)  # 5
+            ],
+            [
+                (self.topLeftMargin, self.topLeftMargin), (self.bottomRightMargin, self.bottomRightMargin),
+                (self.topLeftMargin, self.bottomRightMargin), (self.bottomRightMargin, self.topLeftMargin),
+                (self.center, self.topLeftMargin), (self.center, self.bottomRightMargin)  # 6
+            ]
+        ]
+
+        for dot in dotPosition[self.diceValue - 1]:
             if (self.dotSize >= 2):
                 pygame.draw.circle(self.surface, self.dotColor, (
                     self.position[0] + dot[0],
@@ -262,62 +267,112 @@ class DiceUI(UIObject):
 
 
 class DiceRollUI(UIObject):
-    def __init__(self, diceRoll, gap, size, position, surface, color=pygame.Color('white'), selectable=False, throwTime=0):
+    def __init__(self, diceRoll, gap, size, position, surface, color=pygame.Color('white'), selectable=False):
         super().__init__(len(diceRoll) * (size + gap), size, position, surface)
         self.size = size
-        self.diceDraw = []
         self.diceRoll = diceRoll
         self.gap = gap
+        self.color = color
         self.selectable = selectable
-        self.throwTime = throwTime
+
+        # TODO: create timer class to allocate unique timer value
+        # for animation displaying dice one by one
+        self.animationTime = 0
         self.animation = False
         self.animationEvent = pygame.USEREVENT
         self.nbDicesToDraw = len(diceRoll)
-        self.color = color
-        for n in range(0, len(diceRoll)):
-            self.diceDraw.append(
-                DiceUI(diceRoll[n], size, (position[0] + n * (size + gap), position[1]), surface, color, self.selectable))
+        self.animationSound = 0
 
-    def update(self, diceRoll, color=pygame.Color('white'), selectable=False, throwTime=0):
+        # for animation displaying random dice values until dice settles
+        self.randomDiceAnimationTime = 80
+        self.randomDiceAnimation = False
+        self.randomDiceEvent = pygame.USEREVENT + 2
+        self.backupDiceValue = 0
+        self.backupDice = 0
+
+        self.diceDraw = []
+        for n in range(0, len(self.diceRoll)):
+            self.diceDraw.append(
+                DiceUI(self.diceRoll[n], self.size, (self.position[0] + n * (self.size + self.gap), self.position[1]), self.surface, self.color, self.selectable))
+
+    def update(self, diceRoll):
         self.__init__(diceRoll, self.gap, self.size, self.position,
-                      self.surface, self.color, selectable, throwTime)
+                      self.surface, self.color, self.selectable)
 
     def remove(self, dice):
         for diceUI in self.diceDraw:
-            if(diceUI.diceValue == dice):
-                diceUI.update(0)
+            if(diceUI.getDiceValue() == dice):
+                diceUI.setDiceValue(0)
                 return
 
-    def startAnimation(self):
+    def setSelectable(self, selectable):
+        self.selectable = selectable
+        for n in range(0, len(self.diceRoll)):
+            self.diceDraw[n].setSelectable(self.selectable)
+
+    def startAnimation(self, sound, time):
         if(len(self.diceRoll) != 0):
+            self.animationSound = sound
+            self.animationTime = time
             self.animation = True
-            pygame.time.set_timer(self.animationEvent, self.throwTime)
+            pygame.time.set_timer(self.animationEvent, self.animationTime)
             self.nbDicesToDraw = 0
-            return self.animationEvent
 
     def updateAnimation(self):
         if(self.animation):
-            pygame.time.set_timer(self.animationEvent, self.throwTime)
-            self.nbDicesToDraw += 1
             if(self.nbDicesToDraw == len(self.diceRoll)):
                 self.stopAnimation()
+                return "diceRollAnimationCompleted"
+            self.animationSound.play()
+            # increase animation time for last 2 dices to give more suspense
+            if(len(self.diceRoll) - self.nbDicesToDraw <= 2):
+                self.animationTime = int(self.animationTime * random.uniform(1.5, 2.5))
+            pygame.time.set_timer(self.animationEvent, self.animationTime)
+            self.stopRandomizeDice()
+            self.nbDicesToDraw += 1
+            self.startRandomizeDice(self.nbDicesToDraw - 1)
+        return False
 
     def stopAnimation(self):
         self.animation = False
+        self.stopRandomizeDice()
         pygame.time.set_timer(self.animationEvent, 0)
         self.nbDicesToDraw = len(self.diceRoll)
-        for dice in self.diceDraw:
-            dice.setColor(self.color)
 
-    def isAnimationComplete(self):
-        return(not self.animation)
+    def startRandomizeDice(self, dice):
+        self.backupDiceValue = self.diceDraw[dice].getDiceValue()
+        self.backupDice = dice
+        self.diceDraw[self.backupDice].setDiceValue(random.choice([1, 2, 3, 4, 5, 6]))
+        pygame.time.set_timer(self.randomDiceEvent, self.randomDiceAnimationTime)
+        self.randomDiceAnimation = True
+
+    def stopRandomizeDice(self):
+        if(self.randomDiceAnimation):
+            self.diceDraw[self.backupDice].setDiceValue(self.backupDiceValue)
+            pygame.time.set_timer(self.randomDiceEvent, 0)
+            self.randomDiceAnimation = False
+
+    def updateRandomizeDice(self):
+        if(self.randomDiceAnimation):
+            self.animationSound.play()
+            self.diceDraw[self.backupDice].setDiceValue(random.choice([1, 2, 3, 4, 5, 6]))
+            pygame.time.set_timer(self.randomDiceEvent, self.randomDiceAnimationTime)
 
     def draw(self):
         if(self.nbDicesToDraw != 0):
             for n in range(0, self.nbDicesToDraw):
                 self.diceDraw[n].draw()
 
+    def isAnimationComplete(self):
+        return(not self.animation)
+
     def handleEvent(self, event):
+        # update animation on timer expiration
+        if(event.type == self.animationEvent):
+            return(self.updateAnimation())
+        elif(event.type == self.randomDiceEvent):
+            self.updateRandomizeDice()
+        # pass event down to sub UI components
         for dice in self.diceDraw:
             dice.handleEvent(event)
 
@@ -325,5 +380,5 @@ class DiceRollUI(UIObject):
         diceSelection = []
         for dice in self.diceDraw:
             if(dice.isSelected()):
-                diceSelection.append(dice.diceValue)
+                diceSelection.append(dice.getDiceValue())
         return diceSelection

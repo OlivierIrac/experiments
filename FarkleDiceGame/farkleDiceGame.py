@@ -360,9 +360,6 @@ class FarkleDiceGame:
         self.currentPlayer = 0
         scoreForPossibleFollowUp = 0
         nbDicesToThrow = 6
-        print(len(self.players), "players:")
-        for player in self.players:
-            print(player.name)
         self.turn = 1
         while(not gameOver):
             self.updateUI(self, "startTurn", self.currentPlayer)
