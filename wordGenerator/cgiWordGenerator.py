@@ -1,5 +1,5 @@
-
 #!/usr/bin/python3.6
+# -*- coding: utf-8 -*-
 '''
 Created on 19 juil. 2017
 
@@ -20,7 +20,7 @@ class WordGenerator:
     # tripletsProba [char1][char2][char3] stores number of occurrences of char1 followed by char2 followed by char3
     # tables are normalized so that row sum=1 to be able to use numpy.random.choice duplets[char1], triplets [char1][char2]
     __alphabet = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
-                  'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', ' ', '’', '-', '\'', 'œ', 'ç', 'á', 'é', 'ú', 'à', 'À', 'è', 'ì', 'ò', 'ù', 'â', 'ê', 'î', 'ô', 'û', 'ä', 'ë', 'ï', 'ö', 'ü', 'Ã', 'Ä', 'ß']
+                  'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', ' ', 'â€™', '-', '\'', 'Å“', 'Ã§', 'Ã¡', 'Ã©', 'Ãº', 'Ã ', 'Ã€', 'Ã¨', 'Ã¬', 'Ã²', 'Ã¹', 'Ã¢', 'Ãª', 'Ã®', 'Ã´', 'Ã»', 'Ã¤', 'Ã«', 'Ã¯', 'Ã¶', 'Ã¼', 'Ãƒ', 'Ã„', 'ÃŸ']
     __space = __alphabet.index(' ')
     __tableSize = len(__alphabet)
 
